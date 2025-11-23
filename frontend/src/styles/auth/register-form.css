@@ -1,0 +1,43 @@
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.two-cols {
+  gap: 1rem;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field-last {
+  margin-bottom: 1.25rem;
+}
+
+.form-lower {
+  margin-top: 1rem;
+}
+
+@media (max-width: 900px) {
+  .auth-form {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .auth-form > *:not(.form-lower) {
+    flex: 0 0 auto;
+  }
+
+  .form-lower {
+    margin-top: auto;
+  }
+}
