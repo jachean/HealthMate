@@ -1,0 +1,18 @@
+.hm-btn {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.hm-btn--primary {
+  background-color: #1da1ff;
+  color: #fff;
+}
+
+.hm-btn--primary:hover {
+  filter: brightness(1.03);
+}
+
+.hm-btn--outline {
+  border-color: #1da1ff !important;
+  color: #1da1ff !important;
+}

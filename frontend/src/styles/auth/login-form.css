@@ -1,0 +1,88 @@
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field-last {
+  margin-bottom: 1.25rem;
+}
+
+.form-lower {
+  margin-top: 1rem;
+}
+
+.mobile-only {
+  display: none;
+}
+
+.tip-slide-enter-active,
+.tip-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.tip-slide-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.tip-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.field-error {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #d63031 !important;
+  text-align: left;
+}
+
+@media (max-width: 900px) {
+  .auth-form {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .auth-form > *:not(.form-lower) {
+    flex: 0 0 auto;
+  }
+
+  .form-lower {
+    margin-top: auto;
+  }
+
+  .mobile-only {
+    display: flex;
+  }
+
+  .health-tip {
+    background: #eef4ff;
+    border-left: 4px solid #1da1ff;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.9rem;
+    color: #3a3f47;
+  }
+
+  .health-tip .tip-icon {
+    font-size: 1.4rem;
+  }
+
+  .health-tip p {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: #555;
+  }
+  .field-error {
+    text-align: center;
+  }
+}

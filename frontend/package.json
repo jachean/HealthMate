@@ -17,17 +17,22 @@
     "axios": "^1.13.2",
     "pinia": "^3.0.3",
     "vue": "^3.5.22",
-    "vue-router": "^4.6.3"
+    "vue-router": "^4.6.3",
+    "vuetify": "^3.10.11"
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "@mdi/font": "^7.4.47",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/eslint-config-prettier": "^10.2.0",
     "eslint": "^9.37.0",
     "eslint-plugin-vue": "~10.5.0",
     "globals": "^16.4.0",
+    "material-design-icons-iconfont": "^6.7.0",
     "prettier": "3.6.2",
     "vite": "^7.1.11",
-    "vite-plugin-vue-devtools": "^8.0.3"
+    "vite-plugin-vue-devtools": "^8.0.3",
+    "vite-plugin-vuetify": "^2.1.2"
   }
 }
