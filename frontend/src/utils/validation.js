@@ -2,7 +2,7 @@ export const required = (fieldName) => (v) =>
   !!v || `${fieldName} is required`
 
 export const emailRule = (v) =>
-  !v || /.+@.+\..+/.test(v) || 'Email must be valid'
+  !v || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) || 'Email must be valid'
 
 export const minPasswordLength = (min) => (v) =>
   !v || v.length >= min || `Password must be at least ${min} characters`

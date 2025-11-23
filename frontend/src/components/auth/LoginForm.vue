@@ -56,7 +56,7 @@ const submitLogin = async () => {
       v-model="loginEmail"
       label="Email"
       type="email"
-      autocomplete="email"
+      autocomplete="username"
       :rules="emailRules"
     />
 
