@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import BaseTextField from '@/components/ui/BaseTextField.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import { useAuthValidation } from '@/composables/useAuthValidation'
+import { useAuthService } from '@/services/authService'
 
 const emit = defineEmits(['success', 'error'])
 
@@ -16,7 +17,10 @@ const password = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
 
+const backendErrors = ref({})
+
 const { registerRules } = useAuthValidation(password)
+const { register } = useAuthService()
 
 const firstNameRules = registerRules.firstName
 const lastNameRules = registerRules.lastName
@@ -27,6 +31,7 @@ const confirmRules = registerRules.confirmPassword
 
 const submit = async () => {
   loading.value = true
+  backendErrors.value = {}
   emit('error', '')
 
   const { valid } = await formRef.value.validate()
@@ -35,11 +40,28 @@ const submit = async () => {
     return
   }
 
-  // TODO: Replace with real signup API
-  await new Promise((r) => setTimeout(r, 500))
+  const payload = {
+    firstName: firstName.value,
+    lastName: lastName.value,
+    email: email.value,
+    username: username.value,
+    password: password.value,
+    confirmPassword: confirmPassword.value,
+  }
+
+  const result = await register(payload)
+  loading.value = false
+
+  if (!result.ok) {
+    if (result.validationErrors) {
+      backendErrors.value = result.validationErrors
+    } else {
+      emit('error', 'Unable to create account. Please try again.')
+    }
+    return
+  }
 
   emit('success')
-  loading.value = false
 }
 </script>
 
@@ -50,11 +72,13 @@ const submit = async () => {
         v-model="firstName"
         label="First Name"
         :rules="firstNameRules"
+        :error-messages="backendErrors.firstName"
       />
       <BaseTextField
         v-model="lastName"
         label="Last Name"
         :rules="lastNameRules"
+        :error-messages="backendErrors.lastName"
       />
     </div>
 
@@ -64,12 +88,14 @@ const submit = async () => {
       label="Email"
       autocomplete="email"
       :rules="emailRules"
+      :error-messages="backendErrors.email"
     />
 
     <BaseTextField
       v-model="username"
       label="Username"
       :rules="usernameRules"
+      :error-messages="backendErrors.username"
     />
 
     <BaseTextField
@@ -78,6 +104,7 @@ const submit = async () => {
       label="Password"
       autocomplete="new-password"
       :rules="passwordRules"
+      :error-messages="backendErrors.password"
     />
 
     <BaseTextField
@@ -86,6 +113,7 @@ const submit = async () => {
       label="Confirm password"
       autocomplete="new-password"
       :rules="confirmRules"
+      :error-messages="backendErrors.confirmPassword"
     />
 
     <BaseButton type="submit" block :loading="loading">
