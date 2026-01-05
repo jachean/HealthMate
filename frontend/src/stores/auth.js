@@ -15,7 +15,6 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        // 👇 this URL must match Postman
         const { data } = await api.post('/api/login', {
           email,
           password,
