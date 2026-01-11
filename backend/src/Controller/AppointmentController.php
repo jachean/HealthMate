@@ -66,6 +66,15 @@ final class AppointmentController extends AbstractController
             ], 400);
         }
 
+        if ($timeSlotRepository->hasOverlappingAppointment($timeSlot)) {
+            return $this->json([
+                'error' => [
+                    'code' => 'TIME_SLOT_CONFLICT',
+                    'message' => 'This time slot is no longer available.',
+                ]
+            ], 409);
+        }
+
         if ($appointmentRepository->existsForTimeSlot($timeSlot->getId())) {
             return $this->json([
                 'error' => [
@@ -78,6 +87,8 @@ final class AppointmentController extends AbstractController
         $appointment = new Appointment();
         $appointment->setUser($user);
         $appointment->setTimeSlot($timeSlot);
+
+        $timeSlot->setIsBooked(true);
 
         $em->persist($appointment);
         $em->flush();

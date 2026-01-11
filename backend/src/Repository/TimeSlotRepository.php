@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\TimeSlot;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Entity\Appointment;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -61,5 +62,22 @@ class TimeSlotRepository extends ServiceEntityRepository
             ->setParameter('cutoff', $cutoff)
             ->getQuery()
             ->execute();
+    }
+
+    public function hasOverlappingAppointment(TimeSlot $slot): bool
+    {
+        return (bool) $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('1')
+            ->from(Appointment::class, 'a')
+            ->join('a.timeSlot', 'ts')
+            ->where('ts.doctor = :doctor')
+            ->andWhere('ts.startAt < :end')
+            ->andWhere('ts.endAt > :start')
+            ->setParameter('doctor', $slot->getDoctor())
+            ->setParameter('start', $slot->getStartAt())
+            ->setParameter('end', $slot->getEndAt())
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }
