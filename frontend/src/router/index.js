@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import PublicLayout from '@/components/layout/PublicLayout.vue'
 import HomeView from '@/views/HomeView.vue'
 import AuthView from '@/views/AuthView.vue'
-import MeView from '@/views/MeView.vue'
+import ProfileView from '@/views/ProfileView.vue'
 import TermsView from '@/views/TermsView.vue'
 import PrivacyView from '@/views/PrivacyView.vue'
 import ContactView from '@/views/ContactView.vue'
@@ -44,7 +44,7 @@ const router = createRouter({
     {
       path: '/me',
       name: 'me',
-      component: MeView,
+      component: ProfileView,
       meta: { requiresAuth: true },
     },
   ],
