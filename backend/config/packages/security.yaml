@@ -31,4 +31,8 @@ security:
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
+        - { path: ^/api/doctors/\d+/availability, roles: PUBLIC_ACCESS }
+        - { path: ^/api/doctors, roles: PUBLIC_ACCESS }
+        - { path: ^/api/clinics, roles: PUBLIC_ACCESS }
+        - { path: ^/api/specialties, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
