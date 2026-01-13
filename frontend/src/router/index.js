@@ -6,6 +6,7 @@ import ProfileView from '@/views/ProfileView.vue'
 import TermsView from '@/views/TermsView.vue'
 import PrivacyView from '@/views/PrivacyView.vue'
 import ContactView from '@/views/ContactView.vue'
+import DoctorsView from '@/views/DoctorsView.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
@@ -19,6 +20,11 @@ const router = createRouter({
           path: '',
           name: 'home',
           component: HomeView,
+        },
+        {
+          path: 'doctors',
+          name: 'doctors',
+          component: DoctorsView,
         },
         {
           path: 'terms',

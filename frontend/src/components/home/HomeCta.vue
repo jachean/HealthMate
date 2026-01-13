@@ -1,4 +1,16 @@
-<script setup></script>
+<script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+function goToDoctors() {
+  router.push({ path: '/doctors' })
+}
+
+function goToRegister() {
+  router.push({ name: 'register' })
+}
+</script>
 
 <template>
   <v-card
@@ -26,11 +38,16 @@
           variant="outlined"
           color="white"
           class="mr-3"
+          @click="goToDoctors"
         >
           Browse specialties
         </v-btn>
 
-        <v-btn color="white" variant="flat">
+        <v-btn
+          color="white"
+          variant="flat"
+          @click="goToRegister"
+        >
           Create account
         </v-btn>
       </v-col>

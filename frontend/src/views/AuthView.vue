@@ -27,7 +27,7 @@ const toggleMode = () => {
 }
 
 const handleLoginSuccess = () => {
-  const redirect = route.query.redirect || '/me'
+  const redirect = route.query.redirect || '/'
   router.push(redirect)
 }
 

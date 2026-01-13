@@ -26,26 +26,38 @@ class DoctorRepository extends ServiceEntityRepository
             ->leftJoin('d.clinic', 'c')
             ->leftJoin('d.specialties', 's')
             ->addSelect('c', 's')
-            ->where('d.isActive = true');
+            ->andWhere('d.isActive = true');
 
         if ($clinicId !== null) {
-            $qb->andWhere('c.id = :clinicId')
+            $qb
+                ->andWhere('c.id = :clinicId')
                 ->setParameter('clinicId', $clinicId);
         }
 
         if ($city !== null) {
-            $qb->andWhere('c.city = :city')
+            $qb
+                ->andWhere('c.city = :city')
                 ->setParameter('city', $city);
         }
 
-        if ($specialtySlug !== null) {
-            $qb->andWhere('s.slug = :slug')
-                ->setParameter('slug', $specialtySlug);
+        if ($acceptsInsurance !== null) {
+            $qb
+                ->andWhere('d.acceptsInsurance = :ai')
+                ->setParameter('ai', $acceptsInsurance);
         }
 
-        if ($acceptsInsurance !== null) {
-            $qb->andWhere('d.acceptsInsurance = :ai')
-                ->setParameter('ai', $acceptsInsurance);
+        if ($specialtySlug !== null) {
+            $qb->andWhere(
+                $qb->expr()->exists(
+                    $this->createQueryBuilder('d2')
+                        ->select('1')
+                        ->innerJoin('d2.specialties', 's2')
+                        ->where('d2 = d')
+                        ->andWhere('s2.slug = :slug')
+                        ->getDQL()
+                )
+            )
+                ->setParameter('slug', $specialtySlug);
         }
 
         return $qb

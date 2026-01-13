@@ -1,12 +1,25 @@
 <script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 const specialties = [
-  'Cardiology',
-  'Dermatology',
-  'Pediatrics',
-  'Dentistry',
-  'Neurology',
-  'General medicine',
+  { label: 'Cardiology', slug: 'cardiology' },
+  { label: 'Dermatology', slug: 'dermatology' },
+  { label: 'Pediatrics', slug: 'pediatrics' },
+  { label: 'Dentistry', slug: 'dentistry' },
+  { label: 'Neurology', slug: 'neurology' },
+  { label: 'General medicine', slug: 'general-medicine' },
 ]
+
+function goToSpecialty(slug) {
+  router.push({
+    path: '/doctors',
+    query: {
+      specialty: slug,
+    },
+  })
+}
 </script>
 
 <template>
@@ -23,7 +36,7 @@ const specialties = [
     <v-row dense>
       <v-col
         v-for="spec in specialties"
-        :key="spec"
+        :key="spec.slug"
         cols="12"
         sm="6"
         md="4"
@@ -31,11 +44,12 @@ const specialties = [
         <v-card
           elevation="2"
           rounded="lg"
-          class="pa-4"
+          class="pa-4 cursor-pointer"
           hover
+          @click="goToSpecialty(spec.slug)"
         >
           <div class="font-weight-bold mb-1">
-            {{ spec }}
+            {{ spec.label }}
           </div>
           <div class="text-body-2 text-medium-emphasis">
             Browse doctors →

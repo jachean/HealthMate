@@ -28,7 +28,7 @@ class Clinic
     #[ORM\Column(length: 255)]
     private string $address;
 
-    #[Groups(['clinic:list'])]
+    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail'])]
     #[ORM\Column(length: 100)]
     private string $city;
 
