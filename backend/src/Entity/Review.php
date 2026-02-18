@@ -13,10 +13,10 @@ class Review
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
-    private int $rating;
+    #[ORM\Column(type: 'float')]
+    private float $rating;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 500, nullable: true)]
     private ?string $comment = null;
 
     #[ORM\Column]
@@ -32,6 +32,13 @@ class Review
     #[ORM\ManyToOne(inversedBy: 'reviews')]
     private ?Clinic $clinic = null;
 
+    #[ORM\OneToOne(targetEntity: Appointment::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Appointment $appointment = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $authorName = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -42,19 +49,19 @@ class Review
         return $this->id;
     }
 
-    public function getRating(): int
+    public function getRating(): float
     {
-        return $this->rating;
+        return (float) $this->rating;
     }
 
-    public function setRating(int $rating): static
+    public function setRating(float $rating): static
     {
-
-        if ($rating < 1 || $rating > 5) {
-            throw new \InvalidArgumentException('Rating must be between 1 and 5.');
+        $rounded = round($rating * 2) / 2;
+        if ($rounded < 0.5 || $rounded > 5.0) {
+            throw new \InvalidArgumentException('Rating must be between 0.5 and 5.0 in 0.5 increments.');
         }
 
-        $this->rating = $rating;
+        $this->rating = $rounded;
 
         return $this;
     }
@@ -123,6 +130,30 @@ class Review
         }
 
         $this->clinic = $clinic;
+
+        return $this;
+    }
+
+    public function getAppointment(): ?Appointment
+    {
+        return $this->appointment;
+    }
+
+    public function setAppointment(?Appointment $appointment): static
+    {
+        $this->appointment = $appointment;
+
+        return $this;
+    }
+
+    public function getAuthorName(): ?string
+    {
+        return $this->authorName;
+    }
+
+    public function setAuthorName(?string $authorName): static
+    {
+        $this->authorName = $authorName;
 
         return $this;
     }

@@ -65,6 +65,12 @@ class Doctor
     #[ORM\OneToMany(targetEntity: Review::class, mappedBy: 'doctor')]
     private Collection $reviews;
 
+    /**
+     * @var Collection<int, DoctorService>
+     */
+    #[ORM\OneToMany(targetEntity: DoctorService::class, mappedBy: 'doctor', orphanRemoval: true)]
+    private Collection $doctorServices;
+
     public function __construct()
     {
         $this->acceptsInsurance = false;
@@ -73,6 +79,7 @@ class Doctor
         $this->specialties = new ArrayCollection();
         $this->timeSlots = new ArrayCollection();
         $this->reviews = new ArrayCollection();
+        $this->doctorServices = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -228,5 +235,69 @@ class Doctor
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, DoctorService>
+     */
+    public function getDoctorServices(): Collection
+    {
+        return $this->doctorServices;
+    }
+
+    public function addDoctorService(DoctorService $doctorService): static
+    {
+        if (!$this->doctorServices->contains($doctorService)) {
+            $this->doctorServices->add($doctorService);
+            $doctorService->setDoctor($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDoctorService(DoctorService $doctorService): static
+    {
+        $this->doctorServices->removeElement($doctorService);
+
+        return $this;
+    }
+
+    #[Groups(['doctor:list'])]
+    public function getAverageRating(): ?float
+    {
+        if ($this->reviews->isEmpty()) {
+            return null;
+        }
+
+        $sum = 0.0;
+        foreach ($this->reviews as $review) {
+            $sum += $review->getRating();
+        }
+
+        return round($sum / $this->reviews->count(), 1);
+    }
+
+    #[Groups(['doctor:list'])]
+    public function getReviewCount(): int
+    {
+        return $this->reviews->count();
+    }
+
+    #[Groups(['doctor:list'])]
+    public function getStartingPrice(): ?string
+    {
+        if ($this->doctorServices->isEmpty()) {
+            return null;
+        }
+
+        $min = null;
+        foreach ($this->doctorServices as $ds) {
+            $price = $ds->getPrice();
+            if ($min === null || bccomp($price, $min, 2) < 0) {
+                $min = $price;
+            }
+        }
+
+        return $min;
     }
 }

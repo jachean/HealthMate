@@ -24,7 +24,7 @@ class Clinic
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
 
-    #[Groups(['clinic:list'])]
+    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail'])]
     #[ORM\Column(length: 255)]
     private string $address;
 

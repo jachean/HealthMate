@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"C:\\\\Users\\\\Mihai\\\\PhpstormProjects\\\\HealthMate\" diff --stat)",
+      "Bash(php bin/console dbal:run-sql:*)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(node -e:*)",
+      "Bash(npx vite build:*)",
+      "Bash(npm install:*)",
+      "Bash(php bin/console doctrine:fixtures:load:*)",
+      "Bash(php bin/console app:timeslots:generate:*)",
+      "Bash(sh)",
+      "Bash(claude:*)",
+      "Bash(git -C \"C:/Users/Mihai/PhpstormProjects/HealthMate\" diff HEAD -- frontend/src/views/DoctorsView.vue)",
+      "Bash(git -C \"C:/Users/Mihai/PhpstormProjects/HealthMate\" diff HEAD -- frontend/src/components/layout/PublicTopBar.vue frontend/src/components/layout/PublicFooter.vue)",
+      "Bash(git -C \"C:/Users/Mihai/PhpstormProjects/HealthMate\" diff HEAD -- frontend/src/components/layout/PublicTopBar.vue)",
+      "Bash(git -C \"C:/Users/Mihai/PhpstormProjects/HealthMate\" ls-files --others --exclude-standard -- frontend/src/i18n/)",
+      "Bash(git -C:*)",
+      "Bash(composer phpstan:*)",
+      "Bash(php bin/console doctrine:migrations:diff:*)",
+      "Bash(php bin/console doctrine:migrations:migrate:*)"
+    ]
+  }
+}

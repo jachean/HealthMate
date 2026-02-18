@@ -1,7 +1,9 @@
 <script setup>
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 
 function goToDoctors() {
   router.push({ path: '/doctors' })
@@ -13,44 +15,69 @@ function goToRegister() {
 </script>
 
 <template>
-  <v-card
-    elevation="6"
-    rounded="xl"
-    color="primary"
-    class="pa-6 text-white"
-  >
-    <v-row align="center">
-      <v-col cols="12" md="8">
-        <h2 class="text-h6 font-weight-bold mb-1">
-          Ready to book your appointment?
-        </h2>
-        <p class="text-body-2">
-          Start browsing now.
-        </p>
-      </v-col>
+  <div class="text-center text-white">
+    <v-icon size="48" color="white" class="mb-4" style="opacity: 0.9;">
+      mdi-calendar-heart
+    </v-icon>
 
-      <v-col
-        cols="12"
-        md="4"
-        class="d-flex justify-end"
+    <h2 class="cta-heading text-h4 font-weight-bold mb-3">
+      {{ t('cta.title') }}
+    </h2>
+    <p class="text-body-1 mb-8 cta-subtitle">
+      {{ t('cta.subtitle') }}
+    </p>
+
+    <div class="cta-actions d-flex justify-center ga-3 flex-wrap">
+      <v-btn
+        size="large"
+        color="white"
+        variant="flat"
+        class="cta-btn text-primary font-weight-bold"
+        @click="goToDoctors"
       >
-        <v-btn
-          variant="outlined"
-          color="white"
-          class="mr-3"
-          @click="goToDoctors"
-        >
-          Browse specialties
-        </v-btn>
+        <v-icon start>mdi-magnify</v-icon>
+        {{ t('cta.browseDoctors') }}
+      </v-btn>
 
-        <v-btn
-          color="white"
-          variant="flat"
-          @click="goToRegister"
-        >
-          Create account
-        </v-btn>
-      </v-col>
-    </v-row>
-  </v-card>
+      <v-btn
+        size="large"
+        variant="outlined"
+        color="white"
+        class="cta-btn"
+        @click="goToRegister"
+      >
+        {{ t('cta.createFreeAccount') }}
+      </v-btn>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.cta-subtitle {
+  opacity: 0.85;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 959px) {
+  .cta-heading {
+    font-size: 1.5rem !important;
+  }
+}
+
+@media (max-width: 599px) {
+  .cta-heading {
+    font-size: 1.3rem !important;
+  }
+
+  .cta-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cta-btn {
+    width: 100%;
+  }
+}
+</style>

@@ -14,9 +14,13 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@vue-leaflet/vue-leaflet": "^0.10.1",
     "axios": "^1.13.2",
+    "flag-icons": "^7.5.0",
+    "leaflet": "^1.9.4",
     "pinia": "^3.0.3",
     "vue": "^3.5.22",
+    "vue-i18n": "^11.2.8",
     "vue-router": "^4.6.3",
     "vuetify": "^3.10.11"
   },

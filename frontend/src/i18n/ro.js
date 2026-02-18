@@ -1,0 +1,247 @@
+export default {
+  // Navbar
+  nav: {
+    home: 'Acasă',
+    doctors: 'Doctori',
+    login: 'Autentificare',
+    createAccount: 'Creează cont',
+    myProfile: 'Profilul meu',
+    logout: 'Deconectare',
+  },
+
+  // Home - Hero
+  hero: {
+    badge: 'Ales de pacienți din toată țara',
+    title: 'Programări medicale,',
+    titleHighlight: 'fără stres',
+    subtitle: 'Caută specialități și clinici fără cont. Autentifică-te doar când ești gata să confirmi.',
+    findDoctor: 'Găsește un doctor',
+    createAccount: 'Creează cont',
+    noBrowseAccount: 'Nu ai nevoie de cont pentru a căuta',
+    freeToUse: 'Gratuit',
+    cardDoctor: 'Dr. Maria S.',
+    cardSpecialty: 'Cardiologie',
+    cardConfirmed: 'Programare confirmată',
+    cardTime: 'Mâine, 10:30',
+  },
+
+  // Home - Trust Strip
+  trust: {
+    browseTitle: 'Navighează fără cont',
+    browseText: 'Caută specialități și clinici liber. Autentifică-te doar la confirmare.',
+    clinicsTitle: 'Mai multe clinici',
+    clinicsText: 'Compară opțiuni din mai multe clinici și alege ora potrivită.',
+    fastTitle: 'Programare rapidă',
+    fastText: 'Specialitate, clinică, doctor, interval orar, confirmare. Cinci pași, gata.',
+  },
+
+  // Home - Popular Specialties
+  specialties: {
+    title: 'Specialități populare',
+    subtitle: 'O modalitate rapidă de a începe programarea',
+    browseDoctors: 'Vezi doctori',
+    cardiology: 'Cardiologie',
+    dermatology: 'Dermatologie',
+    pediatrics: 'Pediatrie',
+    dentistry: 'Stomatologie',
+    neurology: 'Neurologie',
+    generalMedicine: 'Medicină generală',
+  },
+
+  // Home - How It Works
+  howItWorks: {
+    title: 'Cum funcționează',
+    subtitle: 'Un flux simplu de programare creat pentru pacienți',
+    step1Title: 'Alege o specialitate',
+    step1Text: 'Începe larg \u2014 vom restrânge clinicile și doctorii în pasul următor.',
+    step2Title: 'Alege clinica și doctorul',
+    step2Text: 'Compară opțiuni din clinicile asociate.',
+    step3Title: 'Confirmă intervalul orar',
+    step3Text: 'Autentifică-te doar când confirmi programarea.',
+  },
+
+  // Home - CTA
+  cta: {
+    title: 'Ești gata să programezi următoarea vizită?',
+    subtitle: 'Alătură-te miilor de pacienți care își programează vizitele medicale prin HealthMate. Fără taxe, fără bătăi de cap.',
+    browseDoctors: 'Caută doctori',
+    createFreeAccount: 'Creează cont gratuit',
+  },
+
+  // Footer
+  footer: {
+    tagline: 'Programări medicale, simplificate',
+    description: 'Caută clinici și doctori, programează vizite și gestionează consultațiile într-un singur loc.',
+    terms: 'Termeni',
+    privacy: 'Confidențialitate',
+    contact: 'Contact',
+    bottomTagline: 'Programări medicale moderne și clare',
+  },
+
+  // Doctors Page
+  doctors: {
+    pageTitle: 'Găsește un doctor',
+    pageSubtitle: 'Caută în rețeaua noastră de profesioniști în sănătate',
+    searchPlaceholder: 'Caută după nume, clinică, oraș sau specialitate...',
+    filters: 'Filtre',
+    doctorFound: 'doctor găsit',
+    doctorsFound: 'doctori găsiți',
+    finding: 'Se caută doctori...',
+    noResults: 'Niciun doctor găsit',
+    noResultsHint: 'Încearcă să ajustezi căutarea sau filtrele pentru mai multe rezultate',
+    clearFilters: 'Șterge toate filtrele',
+    from: 'de la',
+    insurance: 'Asigurare',
+    noInsurance: 'Fără asigurare',
+  },
+
+  // Doctor Filters
+  filter: {
+    refine: 'Rafinează rezultatele',
+    clearAll: 'Șterge tot',
+    city: 'Oraș',
+    clinic: 'Clinică',
+    specialty: 'Specialitate',
+    insuranceOnly: 'Arată doar doctorii care acceptă asigurare',
+  },
+
+  // Booking Dialog
+  booking: {
+    title: 'Programează o consultație',
+    loadingServices: 'Se încarcă serviciile...',
+    loadingAvailability: 'Se încarcă disponibilitatea...',
+    booked: 'Programare confirmată!',
+    bookedSubtitle: 'Vei primi o confirmare în curând.',
+    noServices: 'Niciun serviciu disponibil',
+    noServicesHint: 'Acest doctor nu a listat încă niciun serviciu.',
+    noSlots: 'Nicio programare disponibilă',
+    noSlotsHint: 'Te rugăm să revii mai târziu.',
+    noSlotsDay: 'Niciun interval orar disponibil pentru această zi.',
+    step1: 'Alege un serviciu',
+    step2: 'Selectează o zi',
+    step3: 'Alege o oră',
+    confirm: 'Confirmă programarea',
+    clinicLocation: 'Locația clinicii',
+    min: 'min',
+    authRequired: 'Te rugăm să te autentifici pentru a face o programare',
+    slotUnavailable: 'Acest interval orar nu mai este disponibil',
+    alreadyBooked: 'Ai deja o programare la această oră',
+    unknownError: 'Ceva nu a funcționat. Te rugăm să încerci din nou.',
+  },
+
+  // Profile page
+  profile: {
+    title: 'Profilul meu',
+    appointments: 'Istoricul programărilor',
+    appointmentsSubtitle: 'Toate programările sunt păstrate conform cerințelor legale și medicale.',
+    noAppointments: 'Nicio programare încă',
+    noAppointmentsHint: 'Istoricul tău va apărea aici după prima programare.',
+    loadError: 'Nu s-au putut încărca programările. Încearcă din nou.',
+    patientId: 'ID pacient',
+    close: 'Închide',
+    status: {
+      booked: 'Programat',
+      cancelled: 'Anulat',
+    },
+    detail: {
+      title: 'Detalii programare',
+      doctor: 'Doctor',
+      clinic: 'Clinică',
+      service: 'Serviciu',
+      date: 'Data',
+      time: 'Ora',
+      price: 'Preț',
+      bookedOn: 'Programat pe',
+    },
+  },
+
+  // Locale switcher
+  locale: {
+    en: 'Engleză',
+    ro: 'Română',
+  },
+
+  // Specialties (keyed by slug)
+  specialty: {
+    'cardiology': 'Cardiologie',
+    'dermatology': 'Dermatologie',
+    'neurology': 'Neurologie',
+    'orthopedics': 'Ortopedie',
+    'pediatrics': 'Pediatrie',
+    'psychiatry': 'Psihiatrie',
+    'ophthalmology': 'Oftalmologie',
+    'ent': 'ORL',
+    'general-medicine': 'Medicină generală',
+    'endocrinology': 'Endocrinologie',
+    'gastroenterology': 'Gastroenterologie',
+    'urology': 'Urologie',
+    'gynecology': 'Ginecologie',
+    'pulmonology': 'Pneumologie',
+    'rheumatology': 'Reumatologie',
+    'oncology': 'Oncologie',
+    'nephrology': 'Nefrologie',
+    'infectious-diseases': 'Boli infecțioase',
+    'allergy-and-immunology': 'Alergologie și imunologie',
+    'diabetology': 'Diabetologie',
+    'sports-medicine': 'Medicină sportivă',
+    'geriatrics': 'Geriatrie',
+    'dentistry': 'Stomatologie',
+  },
+
+  // Reviews
+  review: {
+    leave: 'Lasă o recenzie',
+    edit: 'Editează recenzia',
+    title: 'Lasă o recenzie',
+    editTitle: 'Editează recenzia ta',
+    rating: 'Nota ta',
+    comment: 'Comentariu (opțional)',
+    commentPlaceholder: 'Descrie experiența ta...',
+    submit: 'Trimite recenzia',
+    success: 'Recenzie trimisă!',
+    noReviews: 'Nicio recenzie încă',
+    reviews: 'recenzii',
+    basedOn: 'Bazat pe',
+    yourRating: 'Nota ta',
+    errorSubmit: 'Ceva nu a funcționat. Încearcă din nou.',
+    errorNotPast: 'Poți lăsa o recenzie doar după ce programarea a avut loc.',
+  },
+
+  // Medical services (keyed by slug for translating API data)
+  services: {
+    'consultation': 'Consultație',
+    'follow-up': 'Control',
+    'ecg': 'ECG',
+    'echocardiography': 'Ecocardiografie',
+    'holter-ecg-24h': 'Holter ECG 24h',
+    'blood-pressure-monitoring-24h': 'Monitorizare tensiune 24h',
+    'dermatoscopy': 'Dermatoscopie',
+    'cryotherapy': 'Crioterapie',
+    'skin-biopsy': 'Biopsie cutanată',
+    'dental-scaling': 'Detartraj',
+    'teeth-whitening': 'Albire dentară',
+    'dental-filling': 'Obturație (plombă)',
+    'tooth-extraction': 'Extracție dentară',
+    'root-canal-treatment': 'Tratament de canal',
+    'dental-crown': 'Coroană dentară',
+    'fundus-examination': 'Examen fundus de ochi',
+    'tonometry': 'Tonometrie',
+    'perimetry': 'Campimetrie',
+    'audiometry': 'Audiometrie',
+    'nasal-endoscopy': 'Endoscopie nazală',
+    'upper-endoscopy': 'Endoscopie digestivă',
+    'colonoscopy': 'Colonoscopie',
+    'abdominal-ultrasound': 'Ecografie abdominală',
+    'joint-injection': 'Infiltrație articulară',
+    'pelvic-ultrasound': 'Ecografie pelvină',
+    'pap-smear': 'Test Papanicolau',
+    'renal-ultrasound': 'Ecografie renală',
+    'uroflowmetry': 'Uroflowmetrie',
+    'eeg': 'EEG',
+    'electromyography': 'Electromiografie',
+    'thyroid-ultrasound': 'Ecografie tiroidiană',
+    'spirometry': 'Spirometrie',
+    'pediatric-consultation': 'Consultație pediatrică',
+    'vaccination': 'Vaccinare',
+  },
+}

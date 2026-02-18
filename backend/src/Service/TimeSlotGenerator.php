@@ -4,8 +4,10 @@ namespace App\Service;
 
 use App\Entity\Appointment;
 use App\Entity\Doctor;
+use App\Entity\DoctorService;
 use App\Entity\TimeSlot;
 use App\Repository\DoctorRepository;
+use App\Repository\DoctorServiceRepository;
 use App\Repository\TimeSlotRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,6 +25,7 @@ final class TimeSlotGenerator
 
     public function __construct(
         private readonly DoctorRepository $doctorRepository,
+        private readonly DoctorServiceRepository $doctorServiceRepository,
         private readonly TimeSlotRepository $timeSlotRepository,
         private readonly UserRepository $userRepository,
         private readonly EntityManagerInterface $em
@@ -124,11 +127,20 @@ final class TimeSlotGenerator
 
     private function createDemoAppointment(TimeSlot $slot, array $users): void
     {
+        $doctor = $slot->getDoctor();
+        $services = $this->doctorServiceRepository->findByDoctor($doctor->getId());
+
+        if (empty($services)) {
+            return;
+        }
+
         $user = $users[array_rand($users)];
+        $doctorService = $services[array_rand($services)];
 
         $appointment = new Appointment();
         $appointment->setUser($user);
         $appointment->setTimeSlot($slot);
+        $appointment->setDoctorService($doctorService);
 
         $slot->setIsBooked(true);
 

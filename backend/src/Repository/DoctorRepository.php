@@ -25,7 +25,8 @@ class DoctorRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('d')
             ->leftJoin('d.clinic', 'c')
             ->leftJoin('d.specialties', 's')
-            ->addSelect('c', 's')
+            ->leftJoin('d.doctorServices', 'ds')
+            ->addSelect('c', 's', 'ds')
             ->andWhere('d.isActive = true');
 
         if ($clinicId !== null) {

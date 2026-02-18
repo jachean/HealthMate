@@ -41,18 +41,17 @@ const router = createRouter({
           name: 'contact',
           component: ContactView,
         },
+        {
+          path: 'me',
+          name: 'me',
+          component: ProfileView,
+          meta: { requiresAuth: true },
+        },
       ],
     },
 
     { path: '/login', name: 'login', component: AuthView },
     { path: '/register', name: 'register', component: AuthView },
-
-    {
-      path: '/me',
-      name: 'me',
-      component: ProfileView,
-      meta: { requiresAuth: true },
-    },
   ],
 })
 

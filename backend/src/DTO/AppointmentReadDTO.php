@@ -13,6 +13,10 @@ final class AppointmentReadDTO
         public string $clinicName,
         public string $startAt,
         public string $endAt,
+        public string $serviceName,
+        public string $price,
+        public ?int $reviewId = null,
+        public ?float $reviewRating = null,
     ) {
     }
 }
