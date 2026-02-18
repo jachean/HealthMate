@@ -9,4 +9,8 @@ class AppointmentCreateDTO
     #[Assert\NotNull]
     #[Assert\Type('integer')]
     public int $timeSlotId;
+
+    #[Assert\NotNull]
+    #[Assert\Type('integer')]
+    public int $doctorServiceId;
 }

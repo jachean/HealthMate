@@ -30,6 +30,13 @@ class Appointment
     #[ORM\JoinColumn(nullable: false)]
     private User $user;
 
+    #[ORM\ManyToOne(inversedBy: 'appointments')]
+    #[ORM\JoinColumn(nullable: false)]
+    private DoctorService $doctorService;
+
+    #[ORM\OneToOne(mappedBy: 'appointment', targetEntity: Review::class)]
+    private ?Review $review = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -96,5 +103,22 @@ class Appointment
         $this->user = $user;
 
         return $this;
+    }
+
+    public function getDoctorService(): DoctorService
+    {
+        return $this->doctorService;
+    }
+
+    public function setDoctorService(DoctorService $doctorService): static
+    {
+        $this->doctorService = $doctorService;
+
+        return $this;
+    }
+
+    public function getReview(): ?Review
+    {
+        return $this->review;
     }
 }

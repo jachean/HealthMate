@@ -31,6 +31,7 @@ final class SpecialtyFixture extends Fixture
         'Diabetology',
         'Sports Medicine',
         'Geriatrics',
+        'Dentistry',
     ];
 
     public function load(ObjectManager $manager): void

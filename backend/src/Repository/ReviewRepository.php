@@ -15,4 +15,29 @@ class ReviewRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Review::class);
     }
+
+    /**
+     * Returns reviews for a doctor, newest first.
+     */
+    public function findByDoctor(int $doctorId): array
+    {
+        return $this->createQueryBuilder('r')
+            ->where('r.doctor = :doctorId')
+            ->setParameter('doctorId', $doctorId)
+            ->orderBy('r.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Check if a review already exists for an appointment.
+     */
+    public function findByAppointment(int $appointmentId): ?Review
+    {
+        return $this->createQueryBuilder('r')
+            ->where('r.appointment = :appointmentId')
+            ->setParameter('appointmentId', $appointmentId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

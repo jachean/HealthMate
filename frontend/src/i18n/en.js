@@ -1,0 +1,247 @@
+export default {
+  // Navbar
+  nav: {
+    home: 'Home',
+    doctors: 'Doctors',
+    login: 'Log in',
+    createAccount: 'Create account',
+    myProfile: 'My profile',
+    logout: 'Log out',
+  },
+
+  // Home - Hero
+  hero: {
+    badge: 'Trusted by patients nationwide',
+    title: 'Book medical appointments,',
+    titleHighlight: 'stress-free',
+    subtitle: 'Browse specialties and clinics without an account. Log in only when you\'re ready to confirm.',
+    findDoctor: 'Find a doctor',
+    createAccount: 'Create account',
+    noBrowseAccount: 'No account needed to browse',
+    freeToUse: 'Free to use',
+    cardDoctor: 'Dr. Maria S.',
+    cardSpecialty: 'Cardiology',
+    cardConfirmed: 'Appointment Confirmed',
+    cardTime: 'Tomorrow, 10:30 AM',
+  },
+
+  // Home - Trust Strip
+  trust: {
+    browseTitle: 'Browse without login',
+    browseText: 'Search specialties and clinics freely. Log in only when confirming.',
+    clinicsTitle: 'Multiple clinics',
+    clinicsText: 'Browse options across clinics and book the time that fits.',
+    fastTitle: 'Fast booking flow',
+    fastText: 'Specialty, clinic, doctor, time slot, confirm. Five steps, done.',
+  },
+
+  // Home - Popular Specialties
+  specialties: {
+    title: 'Popular specialties',
+    subtitle: 'A quick way to start your booking flow',
+    browseDoctors: 'Browse doctors',
+    cardiology: 'Cardiology',
+    dermatology: 'Dermatology',
+    pediatrics: 'Pediatrics',
+    dentistry: 'Dentistry',
+    neurology: 'Neurology',
+    generalMedicine: 'General Medicine',
+  },
+
+  // Home - How It Works
+  howItWorks: {
+    title: 'How it works',
+    subtitle: 'A simple booking flow designed for patients',
+    step1Title: 'Pick a specialty',
+    step1Text: 'Start broad \u2014 we\'ll narrow down clinics and doctors next.',
+    step2Title: 'Choose clinic & doctor',
+    step2Text: 'Compare options across associated clinics.',
+    step3Title: 'Confirm time slot',
+    step3Text: 'Log in only when confirming your appointment.',
+  },
+
+  // Home - CTA
+  cta: {
+    title: 'Ready to book your next appointment?',
+    subtitle: 'Join thousands of patients who book their medical appointments through HealthMate. No fees, no hassle.',
+    browseDoctors: 'Browse doctors',
+    createFreeAccount: 'Create free account',
+  },
+
+  // Footer
+  footer: {
+    tagline: 'Medical appointment booking, simplified',
+    description: 'Browse clinics and doctors, book appointments, and manage your visits in one place.',
+    terms: 'Terms',
+    privacy: 'Privacy',
+    contact: 'Contact',
+    bottomTagline: 'Clear, modern medical booking',
+  },
+
+  // Doctors Page
+  doctors: {
+    pageTitle: 'Find a Doctor',
+    pageSubtitle: 'Browse our network of qualified healthcare professionals',
+    searchPlaceholder: 'Search by name, clinic, city, or specialty...',
+    filters: 'Filters',
+    doctorFound: 'doctor found',
+    doctorsFound: 'doctors found',
+    finding: 'Finding doctors...',
+    noResults: 'No doctors found',
+    noResultsHint: 'Try adjusting your search or filters to find more results',
+    clearFilters: 'Clear all filters',
+    from: 'from',
+    insurance: 'Insurance',
+    noInsurance: 'No insurance',
+  },
+
+  // Doctor Filters
+  filter: {
+    refine: 'Refine Results',
+    clearAll: 'Clear all',
+    city: 'City',
+    clinic: 'Clinic',
+    specialty: 'Specialty',
+    insuranceOnly: 'Only show doctors that accept insurance',
+  },
+
+  // Booking Dialog
+  booking: {
+    title: 'Book an Appointment',
+    loadingServices: 'Loading services...',
+    loadingAvailability: 'Loading availability...',
+    booked: 'Appointment Booked!',
+    bookedSubtitle: 'You\'ll receive a confirmation shortly.',
+    noServices: 'No services available',
+    noServicesHint: 'This doctor hasn\'t listed any services yet.',
+    noSlots: 'No available appointments',
+    noSlotsHint: 'Please check back later.',
+    noSlotsDay: 'No time slots available for this day.',
+    step1: 'Choose a service',
+    step2: 'Select a day',
+    step3: 'Choose a time',
+    confirm: 'Confirm Booking',
+    clinicLocation: 'Clinic Location',
+    min: 'min',
+    authRequired: 'Please log in to book an appointment',
+    slotUnavailable: 'This time slot is no longer available',
+    alreadyBooked: 'You already have an appointment at this time',
+    unknownError: 'Something went wrong. Please try again.',
+  },
+
+  // Profile page
+  profile: {
+    title: 'My Profile',
+    appointments: 'Appointment history',
+    appointmentsSubtitle: 'All appointments are kept on record for legal and medical purposes.',
+    noAppointments: 'No appointments yet',
+    noAppointmentsHint: 'Your booking history will appear here once you schedule a visit.',
+    loadError: 'Could not load appointments. Please try again.',
+    patientId: 'Patient ID',
+    close: 'Close',
+    status: {
+      booked: 'Booked',
+      cancelled: 'Cancelled',
+    },
+    detail: {
+      title: 'Appointment details',
+      doctor: 'Doctor',
+      clinic: 'Clinic',
+      service: 'Service',
+      date: 'Date',
+      time: 'Time',
+      price: 'Price',
+      bookedOn: 'Booked on',
+    },
+  },
+
+  // Locale switcher
+  locale: {
+    en: 'English',
+    ro: 'Romanian',
+  },
+
+  // Specialties (keyed by slug)
+  specialty: {
+    'cardiology': 'Cardiology',
+    'dermatology': 'Dermatology',
+    'neurology': 'Neurology',
+    'orthopedics': 'Orthopedics',
+    'pediatrics': 'Pediatrics',
+    'psychiatry': 'Psychiatry',
+    'ophthalmology': 'Ophthalmology',
+    'ent': 'ENT',
+    'general-medicine': 'General Medicine',
+    'endocrinology': 'Endocrinology',
+    'gastroenterology': 'Gastroenterology',
+    'urology': 'Urology',
+    'gynecology': 'Gynecology',
+    'pulmonology': 'Pulmonology',
+    'rheumatology': 'Rheumatology',
+    'oncology': 'Oncology',
+    'nephrology': 'Nephrology',
+    'infectious-diseases': 'Infectious Diseases',
+    'allergy-and-immunology': 'Allergy and Immunology',
+    'diabetology': 'Diabetology',
+    'sports-medicine': 'Sports Medicine',
+    'geriatrics': 'Geriatrics',
+    'dentistry': 'Dentistry',
+  },
+
+  // Reviews
+  review: {
+    leave: 'Leave a review',
+    edit: 'Edit review',
+    title: 'Leave a Review',
+    editTitle: 'Edit Your Review',
+    rating: 'Your rating',
+    comment: 'Comment (optional)',
+    commentPlaceholder: 'Share your experience...',
+    submit: 'Submit review',
+    success: 'Review submitted!',
+    noReviews: 'No reviews yet',
+    reviews: 'reviews',
+    basedOn: 'Based on',
+    yourRating: 'Your rating',
+    errorSubmit: 'Something went wrong. Please try again.',
+    errorNotPast: 'You can only leave a review after the appointment has taken place.',
+  },
+
+  // Medical services (keyed by slug for translating API data)
+  services: {
+    'consultation': 'Consultation',
+    'follow-up': 'Follow-up',
+    'ecg': 'ECG',
+    'echocardiography': 'Echocardiography',
+    'holter-ecg-24h': 'Holter ECG 24h',
+    'blood-pressure-monitoring-24h': 'Blood Pressure Monitoring 24h',
+    'dermatoscopy': 'Dermatoscopy',
+    'cryotherapy': 'Cryotherapy',
+    'skin-biopsy': 'Skin Biopsy',
+    'dental-scaling': 'Dental Scaling',
+    'teeth-whitening': 'Teeth Whitening',
+    'dental-filling': 'Dental Filling',
+    'tooth-extraction': 'Tooth Extraction',
+    'root-canal-treatment': 'Root Canal Treatment',
+    'dental-crown': 'Dental Crown',
+    'fundus-examination': 'Fundus Examination',
+    'tonometry': 'Tonometry',
+    'perimetry': 'Perimetry',
+    'audiometry': 'Audiometry',
+    'nasal-endoscopy': 'Nasal Endoscopy',
+    'upper-endoscopy': 'Upper Endoscopy',
+    'colonoscopy': 'Colonoscopy',
+    'abdominal-ultrasound': 'Abdominal Ultrasound',
+    'joint-injection': 'Joint Injection',
+    'pelvic-ultrasound': 'Pelvic Ultrasound',
+    'pap-smear': 'Pap Smear',
+    'renal-ultrasound': 'Renal Ultrasound',
+    'uroflowmetry': 'Uroflowmetry',
+    'eeg': 'EEG',
+    'electromyography': 'Electromyography',
+    'thyroid-ultrasound': 'Thyroid Ultrasound',
+    'spirometry': 'Spirometry',
+    'pediatric-consultation': 'Pediatric Consultation',
+    'vaccination': 'Vaccination',
+  },
+}

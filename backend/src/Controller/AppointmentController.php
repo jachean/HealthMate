@@ -7,6 +7,7 @@ use App\DTO\AppointmentReadDTO;
 use App\Entity\Appointment;
 use App\Entity\User;
 use App\Repository\AppointmentRepository;
+use App\Repository\DoctorServiceRepository;
 use App\Repository\TimeSlotRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,6 +26,7 @@ final class AppointmentController extends AbstractController
         ValidatorInterface $validator,
         TimeSlotRepository $timeSlotRepository,
         AppointmentRepository $appointmentRepository,
+        DoctorServiceRepository $doctorServiceRepository,
         EntityManagerInterface $em,
         Security $security
     ): JsonResponse {
@@ -44,6 +46,7 @@ final class AppointmentController extends AbstractController
         $data = json_decode($request->getContent(), true) ?? [];
 
         $dto->timeSlotId = $data['timeSlotId'] ?? null;
+        $dto->doctorServiceId = $data['doctorServiceId'] ?? null;
 
         $errors = $validator->validate($dto);
         if (\count($errors) > 0) {
@@ -62,6 +65,26 @@ final class AppointmentController extends AbstractController
                 'error' => [
                     'code' => 'TIME_SLOT_NOT_AVAILABLE',
                     'message' => 'This time slot is no longer available.',
+                ]
+            ], 400);
+        }
+
+        $doctorService = $doctorServiceRepository->find($dto->doctorServiceId);
+
+        if (!$doctorService) {
+            return $this->json([
+                'error' => [
+                    'code' => 'SERVICE_NOT_FOUND',
+                    'message' => 'The selected service was not found.',
+                ]
+            ], 400);
+        }
+
+        if ($doctorService->getDoctor()->getId() !== $timeSlot->getDoctor()->getId()) {
+            return $this->json([
+                'error' => [
+                    'code' => 'SERVICE_DOCTOR_MISMATCH',
+                    'message' => 'The selected service does not belong to this doctor.',
                 ]
             ], 400);
         }
@@ -87,29 +110,14 @@ final class AppointmentController extends AbstractController
         $appointment = new Appointment();
         $appointment->setUser($user);
         $appointment->setTimeSlot($timeSlot);
+        $appointment->setDoctorService($doctorService);
 
         $timeSlot->setIsBooked(true);
 
         $em->persist($appointment);
         $em->flush();
 
-        $slot = $appointment->getTimeSlot();
-        $doctor = $slot->getDoctor();
-        $clinic = $doctor->getClinic();
-
-        return $this->json(
-            new AppointmentReadDTO(
-                $appointment->getId(),
-                $appointment->getStatus(),
-                $appointment->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                $doctor->getId(),
-                $doctor->getFirstName() . ' ' . $doctor->getLastName(),
-                $clinic->getName(),
-                $slot->getStartAt()->format(\DateTimeInterface::ATOM),
-                $slot->getEndAt()->format(\DateTimeInterface::ATOM),
-            ),
-            201
-        );
+        return $this->json($this->toReadDTO($appointment), 201);
     }
 
     #[Route('/me/appointments', methods: ['GET'])]
@@ -131,26 +139,36 @@ final class AppointmentController extends AbstractController
 
         $appointments = $repository->findForUserOrderedByStartAt($user);
 
-
         $result = [];
 
         foreach ($appointments as $appointment) {
-            $slot = $appointment->getTimeSlot();
-            $doctor = $slot->getDoctor();
-            $clinic = $doctor->getClinic();
-
-            $result[] = new AppointmentReadDTO(
-                $appointment->getId(),
-                $appointment->getStatus(),
-                $appointment->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                $doctor->getId(),
-                $doctor->getFirstName() . ' ' . $doctor->getLastName(),
-                $clinic->getName(),
-                $slot->getStartAt()->format(\DateTimeInterface::ATOM),
-                $slot->getEndAt()->format(\DateTimeInterface::ATOM),
-            );
+            $result[] = $this->toReadDTO($appointment);
         }
 
         return $this->json($result);
+    }
+
+    private function toReadDTO(Appointment $appointment): AppointmentReadDTO
+    {
+        $slot = $appointment->getTimeSlot();
+        $doctor = $slot->getDoctor();
+        $clinic = $doctor->getClinic();
+        $doctorService = $appointment->getDoctorService();
+        $review = $appointment->getReview();
+
+        return new AppointmentReadDTO(
+            $appointment->getId(),
+            $appointment->getStatus(),
+            $appointment->getCreatedAt()->format(\DateTimeInterface::ATOM),
+            $doctor->getId(),
+            $doctor->getFirstName() . ' ' . $doctor->getLastName(),
+            $clinic->getName(),
+            $slot->getStartAt()->format(\DateTimeInterface::ATOM),
+            $slot->getEndAt()->format(\DateTimeInterface::ATOM),
+            $doctorService->getMedicalService()->getName(),
+            $doctorService->getPrice(),
+            $review?->getId(),
+            $review?->getRating(),
+        );
     }
 }

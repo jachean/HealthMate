@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\DTO\TimeSlotReadDTO;
 use App\Repository\DoctorRepository;
+use App\Repository\DoctorServiceRepository;
 use App\Repository\TimeSlotRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -95,6 +96,26 @@ final class DoctorController extends AbstractController
 
         return $this->json(['status' => 'activated']);
     }
+    #[Route('/{id}/services', methods: ['GET'])]
+    public function services(
+        int $id,
+        DoctorRepository $doctorRepository,
+        DoctorServiceRepository $doctorServiceRepository
+    ): JsonResponse {
+        $doctor = $doctorRepository->find($id);
+
+        if (!$doctor || !$doctor->isActive()) {
+            return $this->json(
+                ['error' => 'Doctor not found'],
+                JsonResponse::HTTP_NOT_FOUND
+            );
+        }
+
+        $services = $doctorServiceRepository->findByDoctor($id);
+
+        return $this->json($services, context: ['groups' => ['doctor_service:list']]);
+    }
+
     #[Route('/{id}/availability', methods: ['GET'])]
     public function availability(
         int $id,
