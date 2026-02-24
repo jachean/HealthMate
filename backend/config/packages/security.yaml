@@ -29,8 +29,10 @@ security:
             jwt: ~
 
     access_control:
+        - { path: ^/api, roles: PUBLIC_ACCESS, methods: [OPTIONS] }
         - { path: ^/api/login$, roles: PUBLIC_ACCESS }
         - { path: ^/api/register$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/contact$, roles: PUBLIC_ACCESS }
 
         - { path: ^/api/doctors(/.*)?$, roles: PUBLIC_ACCESS }
         - { path: ^/api/clinics(/.*)?$, roles: PUBLIC_ACCESS }

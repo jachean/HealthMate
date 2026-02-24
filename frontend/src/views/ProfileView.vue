@@ -25,6 +25,16 @@ const appointments = ref([])
 const loading = ref(true)
 const fetchError = ref(false)
 
+const page = ref(1)
+const perPage = 5
+
+const totalPages = computed(() => Math.ceil(appointments.value.length / perPage))
+
+const paginatedAppointments = computed(() => {
+  const start = (page.value - 1) * perPage
+  return appointments.value.slice(start, start + perPage)
+})
+
 onMounted(async () => {
   try {
     const { data } = await api.get('/api/me/appointments')
@@ -90,6 +100,8 @@ const reviewComment = ref('')
 const reviewSubmitting = ref(false)
 const reviewError = ref(null)
 const reviewSuccess = ref(false)
+const confirmingDelete = ref(false)
+const deletingReview = ref(false)
 
 function openReviewDialog(appt) {
   reviewTargetAppt.value = appt
@@ -97,11 +109,42 @@ function openReviewDialog(appt) {
   reviewComment.value = ''
   reviewError.value = null
   reviewSuccess.value = false
+  confirmingDelete.value = false
   reviewDialogOpen.value = true
 }
 
 function closeReviewDialog() {
   reviewDialogOpen.value = false
+  confirmingDelete.value = false
+}
+
+async function deleteReview() {
+  if (deletingReview.value) return
+
+  deletingReview.value = true
+  reviewError.value = null
+
+  const apptId = reviewTargetAppt.value.id
+
+  try {
+    await api.delete(`/api/appointments/${apptId}/review`)
+
+    const appt = appointments.value.find(a => a.id === apptId)
+    if (appt) {
+      appt.reviewId = null
+      appt.reviewRating = null
+    }
+
+    reviewSuccess.value = true
+    setTimeout(() => {
+      reviewDialogOpen.value = false
+    }, 1500)
+  } catch (e) {
+    reviewError.value = e?.response?.data?.error?.message || t('review.errorDelete')
+    confirmingDelete.value = false
+  } finally {
+    deletingReview.value = false
+  }
 }
 
 async function submitReview() {
@@ -220,7 +263,7 @@ async function submitReview() {
     <!-- Appointment list -->
     <div v-else class="appointment-list">
       <v-card
-        v-for="appt in appointments"
+        v-for="appt in paginatedAppointments"
         :key="appt.id"
         flat
         rounded="xl"
@@ -295,6 +338,16 @@ async function submitReview() {
           </div>
         </div>
       </v-card>
+
+      <v-pagination
+        v-if="totalPages > 1"
+        v-model="page"
+        :length="totalPages"
+        density="comfortable"
+        rounded="lg"
+        color="primary"
+        class="mt-4"
+      />
     </div>
   </v-container>
 
@@ -431,7 +484,9 @@ async function submitReview() {
         <!-- Success state -->
         <div v-if="reviewSuccess" class="d-flex flex-column align-center py-6 text-center">
           <v-icon color="success" size="52" class="mb-3">mdi-check-circle</v-icon>
-          <div class="text-subtitle-1 font-weight-bold">{{ t('review.success') }}</div>
+          <div class="text-subtitle-1 font-weight-bold">
+            {{ confirmingDelete ? t('review.deleteSuccess') : t('review.success') }}
+          </div>
         </div>
 
         <!-- Form -->
@@ -477,6 +532,43 @@ async function submitReview() {
           >
             {{ t('review.submit') }}
           </v-btn>
+
+          <!-- Delete (edit mode only) -->
+          <template v-if="reviewTargetAppt?.reviewId">
+            <v-divider class="my-4" />
+            <div v-if="!confirmingDelete" class="d-flex justify-center">
+              <v-btn
+                variant="text"
+                color="error"
+                size="small"
+                prepend-icon="mdi-trash-can-outline"
+                @click="confirmingDelete = true"
+              >
+                {{ t('review.delete') }}
+              </v-btn>
+            </div>
+            <div v-else class="d-flex align-center justify-center ga-2">
+              <span class="text-body-2 text-medium-emphasis">{{ t('review.deleteConfirm') }}</span>
+              <v-btn
+                color="error"
+                size="small"
+                rounded="lg"
+                :loading="deletingReview"
+                @click="deleteReview"
+              >
+                {{ t('review.deleteConfirmBtn') }}
+              </v-btn>
+              <v-btn
+                variant="text"
+                size="small"
+                rounded="lg"
+                :disabled="deletingReview"
+                @click="confirmingDelete = false"
+              >
+                {{ t('profile.cancel') }}
+              </v-btn>
+            </div>
+          </template>
         </template>
       </div>
     </v-card>

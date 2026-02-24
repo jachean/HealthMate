@@ -7,6 +7,8 @@ const props = defineProps({
   address: { type: String, default: '' },
   city: { type: String, default: '' },
   clinicName: { type: String, default: '' },
+  lat: { type: Number, default: null },
+  lng: { type: Number, default: null },
 })
 
 const mapContainer = ref(null)
@@ -40,16 +42,21 @@ async function initMap() {
   error.value = false
 
   try {
-    const address = fullAddress()
-    if (!address) {
-      error.value = true
-      return
-    }
+    let coords
 
-    const coords = await geocodeAddress(address)
-    if (!coords) {
-      error.value = true
-      return
+    if (props.lat !== null && props.lng !== null) {
+      coords = { lat: props.lat, lng: props.lng }
+    } else {
+      const address = fullAddress()
+      if (!address) {
+        error.value = true
+        return
+      }
+      coords = await geocodeAddress(address)
+      if (!coords) {
+        error.value = true
+        return
+      }
     }
 
     if (map) {

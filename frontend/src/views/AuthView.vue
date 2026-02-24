@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 import AuthLayout from '@/components/auth/AuthLayout.vue'
 import LoginForm from '@/components/auth/LoginForm.vue'
@@ -10,6 +11,7 @@ import useHealthTips from '@/composables/useHealthTips'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const { currentTip, currentTipIndex } = useHealthTips()
 
@@ -40,10 +42,11 @@ const handleError = (msg) => (errorMessage.value = msg)
 <template>
   <AuthLayout :errorMessage="errorMessage">
     <div class="auth-inner" :class="{ 'is-signup': isSignUp }">
+      <!-- ── Login view ──────────────────────────────────────────────────── -->
       <section class="view login-view">
         <div class="side form-side">
-          <h2 class="auth-title">Log in to Your Account</h2>
-          <p class="auth-subtitle">Continue your onboarding experience.</p>
+          <h2 class="auth-title">{{ t('auth.login.title') }}</h2>
+          <p class="auth-subtitle">{{ t('auth.login.subtitle') }}</p>
 
           <LoginForm
             @success="handleLoginSuccess"
@@ -53,20 +56,25 @@ const handleError = (msg) => (errorMessage.value = msg)
         </div>
 
         <div class="side blue-side">
+          <span class="blue-deco blue-deco-1" />
+          <span class="blue-deco blue-deco-2" />
+          <span class="blue-deco blue-deco-3" />
           <div class="blue-content">
-            <h2>Don't Have an Account?</h2>
-            <p>Create your account to begin.</p>
-            <button class="outline-btn" @click="toggleMode">
-              SIGN UP
-            </button>
+            <div class="blue-icon-wrap">
+              <v-icon size="28" color="white">mdi-account-plus-outline</v-icon>
+            </div>
+            <h2>{{ t('auth.panel.newTitle') }}</h2>
+            <p>{{ t('auth.panel.newText') }}</p>
+            <button class="outline-btn" @click="toggleMode">{{ t('auth.panel.signUp') }}</button>
           </div>
         </div>
       </section>
 
+      <!-- ── Sign-up view ────────────────────────────────────────────────── -->
       <section class="view signup-view">
         <div class="side form-side">
-          <h2 class="auth-title">Sign Up</h2>
-          <p class="auth-subtitle">Create your account.</p>
+          <h2 class="auth-title">{{ t('auth.register.title') }}</h2>
+          <p class="auth-subtitle">{{ t('auth.register.subtitle') }}</p>
 
           <RegisterForm
             @success="handleRegisterSuccess"
@@ -75,12 +83,16 @@ const handleError = (msg) => (errorMessage.value = msg)
         </div>
 
         <div class="side blue-side">
+          <span class="blue-deco blue-deco-1" />
+          <span class="blue-deco blue-deco-2" />
+          <span class="blue-deco blue-deco-3" />
           <div class="blue-content">
-            <h2>Already have an account?</h2>
-            <p>Log in to continue.</p>
-            <button class="outline-btn" @click="toggleMode">
-              LOG IN
-            </button>
+            <div class="blue-icon-wrap">
+              <v-icon size="28" color="white">mdi-login-variant</v-icon>
+            </div>
+            <h2>{{ t('auth.panel.welcomeTitle') }}</h2>
+            <p>{{ t('auth.panel.welcomeText') }}</p>
+            <button class="outline-btn" @click="toggleMode">{{ t('auth.panel.signIn') }}</button>
           </div>
         </div>
       </section>

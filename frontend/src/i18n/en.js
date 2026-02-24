@@ -139,6 +139,7 @@ export default {
     loadError: 'Could not load appointments. Please try again.',
     patientId: 'Patient ID',
     close: 'Close',
+    cancel: 'Cancel',
     status: {
       booked: 'Booked',
       cancelled: 'Cancelled',
@@ -152,6 +153,65 @@ export default {
       time: 'Time',
       price: 'Price',
       bookedOn: 'Booked on',
+    },
+  },
+
+  // Health tips (cycling card on auth page)
+  healthTips: [
+    'Aim for at least 10 minutes of walking after each meal.',
+    'Stay hydrated – small sips throughout the day help more.',
+    'Set reminders so you never miss a dose.',
+    'Track how you feel every day — patterns help doctors.',
+    'Take short stretch breaks every hour.',
+    'Eat slowly — it helps control portions.',
+    'Limit screens before bed for better sleep.',
+    'A short nap can restore focus without grogginess.',
+  ],
+
+  // Auth pages
+  auth: {
+    login: {
+      title: 'Welcome back',
+      subtitle: 'Sign in to manage your appointments.',
+      emailLabel: 'Email address',
+      passwordLabel: 'Password',
+      rememberMe: 'Remember me',
+      signIn: 'Sign in',
+      invalidCredentials: 'Invalid email or password',
+    },
+    register: {
+      title: 'Create Account',
+      subtitle: 'Fill in your details to get started.',
+      firstName: 'First Name',
+      lastName: 'Last Name',
+      email: 'Email',
+      username: 'Username',
+      password: 'Password',
+      confirmPassword: 'Confirm Password',
+      submit: 'Create Account',
+      error: 'Unable to create account. Please try again.',
+    },
+    panel: {
+      newTitle: 'New Here?',
+      newText: 'Create an account and start booking trusted doctors in minutes.',
+      signUp: 'Sign up',
+      welcomeTitle: 'Welcome Back',
+      welcomeText: 'Already have an account? Sign in to continue where you left off.',
+      signIn: 'Sign in',
+    },
+    validation: {
+      required: '{field} is required',
+      emailInvalid: 'Email must be valid',
+      passwordMinLength: 'Password must be at least {min} characters',
+      passwordUppercase: 'Password must contain at least one uppercase letter',
+      passwordDigit: 'Password must contain at least one digit',
+      passwordsMatch: 'Passwords must match',
+      fieldEmail: 'Email',
+      fieldPassword: 'Password',
+      fieldFirstName: 'First name',
+      fieldLastName: 'Last name',
+      fieldUsername: 'Username',
+      fieldConfirmPassword: 'Confirm password',
     },
   },
 
@@ -188,6 +248,28 @@ export default {
     'dentistry': 'Dentistry',
   },
 
+  // Contact page
+  contact: {
+    chip: 'Get in touch',
+    title: 'Contact us',
+    subtitle: 'Have a question or need help? Send us a message and we\'ll get back to you within 24 hours.',
+    email: 'Email',
+    emailHint: 'Response within 24 hours',
+    phone: 'Phone',
+    address: 'Address',
+    formTitle: 'Send us a message',
+    name: 'Full name',
+    yourEmail: 'Your email',
+    subject: 'Subject',
+    message: 'Message',
+    messagePlaceholder: 'Tell us how we can help...',
+    sendingAs: 'Sending as',
+    send: 'Send message',
+    successTitle: 'Message sent!',
+    successText: 'Thank you for reaching out. We\'ll get back to you within 24 hours.',
+    errorText: 'Something went wrong. Please try again.',
+  },
+
   // Reviews
   review: {
     leave: 'Leave a review',
@@ -205,6 +287,11 @@ export default {
     yourRating: 'Your rating',
     errorSubmit: 'Something went wrong. Please try again.',
     errorNotPast: 'You can only leave a review after the appointment has taken place.',
+    delete: 'Delete review',
+    deleteConfirm: 'Are you sure?',
+    deleteConfirmBtn: 'Yes, delete',
+    deleteSuccess: 'Review deleted',
+    errorDelete: 'Could not delete the review. Please try again.',
   },
 
   // Medical services (keyed by slug for translating API data)

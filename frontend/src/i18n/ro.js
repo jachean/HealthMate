@@ -139,6 +139,7 @@ export default {
     loadError: 'Nu s-au putut încărca programările. Încearcă din nou.',
     patientId: 'ID pacient',
     close: 'Închide',
+    cancel: 'Anulează',
     status: {
       booked: 'Programat',
       cancelled: 'Anulat',
@@ -152,6 +153,65 @@ export default {
       time: 'Ora',
       price: 'Preț',
       bookedOn: 'Programat pe',
+    },
+  },
+
+  // Health tips (cycling card on auth page)
+  healthTips: [
+    'Încearcă să mergi cel puțin 10 minute după fiecare masă.',
+    'Hidratează-te constant – înghițituri mici pe parcursul zilei sunt mai eficiente.',
+    'Setează alarme pentru a nu rata nicio doză de medicament.',
+    'Notează cum te simți zilnic — tiparele îi ajută pe doctori.',
+    'Fă pauze scurte de stretching în fiecare oră.',
+    'Mănâncă lent — te ajută să controlezi porțiile.',
+    'Limitează ecranele înainte de culcare pentru un somn mai bun.',
+    'Un pui de somn scurt poate reface concentrarea fără a te face somnoros.',
+  ],
+
+  // Auth pages
+  auth: {
+    login: {
+      title: 'Bine ai revenit',
+      subtitle: 'Autentifică-te pentru a-ți gestiona programările.',
+      emailLabel: 'Adresă de email',
+      passwordLabel: 'Parolă',
+      rememberMe: 'Ține-mă minte',
+      signIn: 'Autentificare',
+      invalidCredentials: 'Email sau parolă incorectă',
+    },
+    register: {
+      title: 'Creare cont',
+      subtitle: 'Completează detaliile pentru a începe.',
+      firstName: 'Prenume',
+      lastName: 'Nume',
+      email: 'Email',
+      username: 'Nume utilizator',
+      password: 'Parolă',
+      confirmPassword: 'Confirmă parola',
+      submit: 'Creare cont',
+      error: 'Nu s-a putut crea contul. Încearcă din nou.',
+    },
+    panel: {
+      newTitle: 'Ești nou?',
+      newText: 'Creează un cont și programează doctori de încredere în câteva minute.',
+      signUp: 'Înregistrare',
+      welcomeTitle: 'Bine ai revenit',
+      welcomeText: 'Ai deja un cont? Autentifică-te pentru a continua de unde ai rămas.',
+      signIn: 'Autentificare',
+    },
+    validation: {
+      required: '{field} este obligatoriu',
+      emailInvalid: 'Emailul trebuie să fie valid',
+      passwordMinLength: 'Parola trebuie să aibă cel puțin {min} caractere',
+      passwordUppercase: 'Parola trebuie să conțină cel puțin o literă mare',
+      passwordDigit: 'Parola trebuie să conțină cel puțin o cifră',
+      passwordsMatch: 'Parolele trebuie să coincidă',
+      fieldEmail: 'Email',
+      fieldPassword: 'Parolă',
+      fieldFirstName: 'Prenume',
+      fieldLastName: 'Nume',
+      fieldUsername: 'Nume utilizator',
+      fieldConfirmPassword: 'Confirmă parola',
     },
   },
 
@@ -188,6 +248,28 @@ export default {
     'dentistry': 'Stomatologie',
   },
 
+  // Contact page
+  contact: {
+    chip: 'Contactează-ne',
+    title: 'Contact',
+    subtitle: 'Ai o întrebare sau ai nevoie de ajutor? Trimite-ne un mesaj și îți răspundem în maxim 24 de ore.',
+    email: 'Email',
+    emailHint: 'Răspuns în maxim 24 de ore',
+    phone: 'Telefon',
+    address: 'Adresă',
+    formTitle: 'Trimite-ne un mesaj',
+    name: 'Nume complet',
+    yourEmail: 'Emailul tău',
+    subject: 'Subiect',
+    message: 'Mesaj',
+    messagePlaceholder: 'Descrie cum te putem ajuta...',
+    sendingAs: 'Trimiți ca',
+    send: 'Trimite mesajul',
+    successTitle: 'Mesaj trimis!',
+    successText: 'Îți mulțumim că ne-ai contactat. Îți vom răspunde în maxim 24 de ore.',
+    errorText: 'Ceva nu a funcționat. Te rugăm să încerci din nou.',
+  },
+
   // Reviews
   review: {
     leave: 'Lasă o recenzie',
@@ -205,6 +287,11 @@ export default {
     yourRating: 'Nota ta',
     errorSubmit: 'Ceva nu a funcționat. Încearcă din nou.',
     errorNotPast: 'Poți lăsa o recenzie doar după ce programarea a avut loc.',
+    delete: 'Șterge recenzia',
+    deleteConfirm: 'Ești sigur?',
+    deleteConfirmBtn: 'Da, șterge',
+    deleteSuccess: 'Recenzie ștearsă',
+    errorDelete: 'Nu s-a putut șterge recenzia. Încearcă din nou.',
   },
 
   // Medical services (keyed by slug for translating API data)

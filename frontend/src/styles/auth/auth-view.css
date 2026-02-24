@@ -1,17 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap');
+
+/* ── Page background ──────────────────────────────────────────────────────── */
 .auth-main {
-  background: #f3f5fb;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 35%, rgba(255, 255, 255, 0.65) 0%, transparent 70%),
+    linear-gradient(160deg, #e8eef6 0%, #f0f4fa 40%, #eef1f8 100%);
+  min-height: 100vh;
 }
 
+/* ── Logo area ─────────────────────────────────────────────────────────────── */
+.app-title-wrapper {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.app-tagline {
+  font-size: 11px;
+  color: #8fa3bc;
+  margin-top: 8px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* ── Card ──────────────────────────────────────────────────────────────────── */
 .auth-card {
-  border-radius: 18px;
+  border-radius: 24px !important;
   overflow: hidden;
-  margin-bottom: 40px;
+  box-shadow:
+    0 32px 80px rgba(21, 101, 192, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.07),
+    0 0 0 1px rgba(0, 0, 0, 0.03) !important;
 }
 
+/* ── Sliding mechanism ─────────────────────────────────────────────────────── */
 .auth-inner {
   display: flex;
   width: 200%;
-  transition: transform 0.6s ease;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .auth-inner.is-signup {
@@ -37,96 +63,209 @@
   flex-direction: column;
 }
 
+/* ── Form side ─────────────────────────────────────────────────────────────── */
 .form-side {
-  padding: 48px 48px 32px;
+  padding: 48px 48px 40px;
   justify-content: center;
   align-items: stretch;
+  background: #fff;
 }
 
 .auth-title {
-  margin: 0 0 8px;
-  font-size: 22px;
-  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 800;
+  color: #1a202c;
+  letter-spacing: -0.4px;
+  padding-left: 14px;
+  border-left: 2.5px solid #90caf9;
 }
 
 .auth-subtitle {
-  margin: 0 0 32px;
+  margin: 0 0 28px;
   font-size: 14px;
-  color: #777;
+  color: #718096;
+  line-height: 1.5;
+  padding-left: 14px;
 }
 
+/* ── Blue side ─────────────────────────────────────────────────────────────── */
+/*
+  Gradient is `to bottom` (vertical) so that when the two blue panels sit
+  adjacent during the slide animation, they are pixel-identical and the seam
+  is invisible. A diagonal gradient would produce a visible contrast line.
+*/
 .blue-side {
-  background: #1da1ff;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0),
+    linear-gradient(to bottom, #0d3580 0%, #1565c0 55%, #1878d0 100%);
+  background-size: 22px 22px, 100% 100%;
   align-items: center;
   justify-content: center;
-  padding: 48px;
+  padding: 48px 36px;
   color: #fff;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.blue-content {
+  position: relative;
+  z-index: 2;
+}
+
+.blue-icon-wrap {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.13);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 22px;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .blue-content h2 {
-  margin-bottom: 12px;
-  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  margin-bottom: 10px;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.2px;
 }
 
 .blue-content p {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   font-size: 14px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.80);
+  max-width: 220px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.primary-btn {
-  background-color: #1da1ff !important;
-  color: #fff !important;
-  font-weight: 600;
-  letter-spacing: 0.96px;
-  text-transform: uppercase;
+/* ── Decorative rings ──────────────────────────────────────────────────────── */
+.blue-deco {
+  position: absolute;
+  border-radius: 50%;
+  z-index: 1;
+  pointer-events: none;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.11);
 }
 
-.primary-btn:hover {
-  filter: brightness(1.03);
+@keyframes ring-breathe {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.05); }
 }
 
+.blue-deco-1 {
+  width: 300px;
+  height: 300px;
+  bottom: -120px;
+  right: -120px;
+  box-shadow:
+    0 0 0 30px rgba(255, 255, 255, 0.04),
+    0 0 0 60px rgba(255, 255, 255, 0.025);
+  animation: ring-breathe 9s ease-in-out infinite;
+}
+
+.blue-deco-2 {
+  width: 170px;
+  height: 170px;
+  top: -60px;
+  left: -60px;
+  box-shadow: 0 0 0 26px rgba(255, 255, 255, 0.035);
+  animation: ring-breathe 9s ease-in-out infinite 3s;
+}
+
+.blue-deco-3 {
+  width: 60px;
+  height: 60px;
+  top: 28%;
+  right: 10%;
+  border-color: rgba(255, 255, 255, 0.2);
+  animation: ring-breathe 9s ease-in-out infinite 6s;
+}
+
+/* ── Signup blue side: mirror of login's blue side ─────────────────────────── */
+/*
+  The decorative rings flip to the opposite corners, giving the signup panel
+  a true mirror of the login panel. The content (.blue-content) is
+  counter-flipped so text and icons stay legible.
+*/
+.signup-view .blue-side {
+  transform: scaleX(-1);
+}
+
+.signup-view .blue-side .blue-content {
+  transform: scaleX(-1);
+}
+
+@media (max-width: 900px) {
+  .signup-view .blue-side,
+  .signup-view .blue-side .blue-content {
+    transform: none;
+  }
+}
+
+/* ── CTA button ────────────────────────────────────────────────────────────── */
 .outline-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 24px;
+  padding: 11px 36px;
   border-radius: 9999px;
-  border: 1px solid #fff;
-  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.10);
   color: #fff;
-  font-weight: 600;
-  letter-spacing: 1.28px;
-  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  font-size: 11px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .outline-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  transform: translateY(-2px);
 }
 
+/* ── Error ──────────────────────────────────────────────────────────────────── */
 .error {
-  color: #d63031;
+  color: #c62828;
   padding: 12px 40px 16px;
   font-size: 14px;
 }
 
-.field {
-  margin-bottom: 16px;
+/* ── Health tip — desktop ──────────────────────────────────────────────────── */
+.desktop-only-tip {
+  display: none;
 }
 
-.field-last {
-  margin-bottom: 20px;
+@media (min-width: 901px) {
+  .desktop-only-tip {
+    display: block;
+    margin-top: 20px;
+  }
 }
 
+/* ── Mobile ────────────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .view {
-    flex-direction: column;
+    flex-direction: column !important;
     width: 50%;
-    min-height: 560px;
+    min-height: 540px;
   }
 
   .side {
@@ -134,7 +273,7 @@
   }
 
   .form-side {
-    padding: 32px 24px 24px;
+    padding: 28px 24px 24px;
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
@@ -148,151 +287,30 @@
     padding: 22px 24px;
   }
 
+  .blue-icon-wrap {
+    display: none;
+  }
+
   .blue-content h2 {
     margin-bottom: 6px;
+    font-size: 18px;
   }
 
   .blue-content p {
-    margin-bottom: 12px;
-    font-size: 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    max-width: none;
   }
 
-  .app-title {
-    font-size: 28px;
+  .auth-title {
+    font-size: 21px;
   }
 
-  .auth-form {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  .auth-card {
+    border-radius: 18px !important;
   }
 
-  .auth-form > *:not(.form-lower) {
-    flex: 0 0 auto;
-  }
-
-  .form-lower {
-    margin-top: auto;
-  }
-
-  .mobile-only {
-    display: flex;
-  }
-
-  .health-tip {
-    background: #eef4ff;
-    border-left: 4px solid #1da1ff;
-    padding: 16px;
-    border-radius: 12px;
-    margin-bottom: 24px;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-    color: #3a3f47;
-  }
-
-  .health-tip .tip-icon {
-    font-size: 22px;
-  }
-
-  .health-tip p {
-    margin: 4px 0 0;
-    font-size: 14px;
-    color: #555;
-  }
-
-  .desktop-only {
-    display: none !important;
-  }
-}
-
-.desktop-only {
-  display: none;
-}
-
-.form-error {
-  margin-top: 8px;
-  font-size: 0.85rem;
-  color: #d63031;
-}
-
-@media (min-width: 901px) {
-  .desktop-only {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin-bottom: 32px;
-  }
-}
-
-.desktop-health-tip {
-  background: #eef4ff;
-  border-left: 4px solid #1da1ff;
-  padding: 16px 24px;
-  border-radius: 12px;
-
-  display: flex;
-  align-items: center;
-  gap: 16px;
-
-  max-width: 650px;
-  width: 100%;
-  margin: 0 auto;
-
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-}
-
-.desktop-health-tip .tip-icon {
-  font-size: 26px;
-}
-
-.desktop-health-tip p {
-  margin: 4px 0 0;
-  font-size: 14px;
-  color: #555;
-}
-
-.tip-slide-enter-active,
-.tip-slide-leave-active {
-  transition: all 0.3s ease;
-}
-
-.tip-slide-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.tip-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
-}
-
-.mobile-only-tip {
-  display: none;
-}
-
-@media (max-width: 900px) {
-  .mobile-only-tip {
-    display: block;
-  }
   .desktop-only-tip {
-    display: none !important;
-  }
-  .form-error {
-    text-align: center;
-    width: 100%;
-  }
-}
-
-.desktop-only-tip {
-  display: none;
-}
-
-@media (min-width: 901px) {
-  .desktop-only-tip {
-    display: block;
-  }
-  .mobile-only-tip {
     display: none !important;
   }
 }
