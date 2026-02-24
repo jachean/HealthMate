@@ -1,39 +1,46 @@
-import {
-  required,
-  emailRule,
-  minPasswordLength,
-  passwordHasUppercase,
-  passwordHasDigit,
-} from '@/utils/validation'
+import { useI18n } from 'vue-i18n'
 
 export const useAuthValidation = (passwordRef = null) => {
+  const { t } = useI18n()
+
   const loginRules = {
-    email: [required('Email'), emailRule],
-    password: [required('Password')],
+    email: [
+      (v) => !!v || t('auth.validation.required', { field: t('auth.validation.fieldEmail') }),
+      (v) => !v || /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(v) || t('auth.validation.emailInvalid'),
+    ],
+    password: [
+      (v) => !!v || t('auth.validation.required', { field: t('auth.validation.fieldPassword') }),
+    ],
   }
 
   const registerRules = {
-    firstName: [required('First name')],
-    lastName: [required('Last name')],
-    email: [required('Email'), emailRule],
-    username: [required('Username')],
+    firstName: [
+      (v) => !!v || t('auth.validation.required', { field: t('auth.validation.fieldFirstName') }),
+    ],
+    lastName: [
+      (v) => !!v || t('auth.validation.required', { field: t('auth.validation.fieldLastName') }),
+    ],
+    email: [
+      (v) => !!v || t('auth.validation.required', { field: t('auth.validation.fieldEmail') }),
+      (v) => !v || /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(v) || t('auth.validation.emailInvalid'),
+    ],
+    username: [
+      (v) => !!v || t('auth.validation.required', { field: t('auth.validation.fieldUsername') }),
+    ],
     password: [
-      required('Password'),
-      minPasswordLength(8),
-      passwordHasUppercase,
-      passwordHasDigit,
+      (v) => !!v || t('auth.validation.required', { field: t('auth.validation.fieldPassword') }),
+      (v) => !v || v.length >= 8 || t('auth.validation.passwordMinLength', { min: 8 }),
+      (v) => !v || /[A-Z]/.test(v) || t('auth.validation.passwordUppercase'),
+      (v) => !v || /\d/.test(v) || t('auth.validation.passwordDigit'),
     ],
   }
 
   if (passwordRef) {
     registerRules.confirmPassword = [
-      required('Confirm password'),
-      (v) => v === passwordRef.value || 'Passwords must match',
+      (v) => !!v || t('auth.validation.required', { field: t('auth.validation.fieldConfirmPassword') }),
+      (v) => v === passwordRef.value || t('auth.validation.passwordsMatch'),
     ]
   }
 
-  return {
-    loginRules,
-    registerRules,
-  }
+  return { loginRules, registerRules }
 }

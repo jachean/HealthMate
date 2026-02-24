@@ -2,13 +2,16 @@
 
 namespace App\Controller\Auth;
 
+use App\Email\WelcomeEmail;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -19,7 +22,9 @@ final class RegisterController extends AbstractController
         Request $request,
         UserRepository $userRepository,
         UserPasswordHasherInterface $passwordHasher,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        MailerInterface $mailer,
+        LoggerInterface $logger,
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
@@ -92,6 +97,17 @@ final class RegisterController extends AbstractController
 
         $em->persist($user);
         $em->flush();
+
+        try {
+            $welcomeEmail = WelcomeEmail::create(
+                $user,
+                $_ENV['MAILER_FROM_EMAIL'],
+                $_ENV['MAILER_FROM_NAME'] ?? 'HealthMate',
+            );
+            $mailer->send($welcomeEmail);
+        } catch (\Throwable $e) {
+            $logger->error('Welcome email failed: ' . $e->getMessage());
+        }
 
         return $this->json(
             [

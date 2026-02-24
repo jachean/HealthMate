@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import BaseTextField from '@/components/ui/BaseTextField.vue'
-import BaseButton from '@/components/ui/BaseButton.vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthValidation } from '@/composables/useAuthValidation'
 import { useAuthService } from '@/services/authService'
 
@@ -19,6 +18,7 @@ const loading = ref(false)
 
 const backendErrors = ref({})
 
+const { t } = useI18n()
 const { registerRules } = useAuthValidation(password)
 const { register } = useAuthService()
 
@@ -56,7 +56,7 @@ const submit = async () => {
     if (result.validationErrors) {
       backendErrors.value = result.validationErrors
     } else {
-      emit('error', 'Unable to create account. Please try again.')
+      emit('error', t('auth.register.error'))
     }
     return
   }
@@ -66,60 +66,134 @@ const submit = async () => {
 </script>
 
 <template>
-  <v-form ref="formRef" @submit.prevent="submit" class="auth-form">
-    <div class="form-row two-cols">
-      <BaseTextField
+  <v-form ref="formRef" validate-on="submit" @submit.prevent="submit" class="auth-form">
+    <div class="name-row">
+      <v-text-field
         v-model="firstName"
-        label="First Name"
+        :label="t('auth.register.firstName')"
+        variant="outlined"
+        rounded="lg"
+        density="comfortable"
         :rules="firstNameRules"
         :error-messages="backendErrors.firstName"
       />
-      <BaseTextField
+      <v-text-field
         v-model="lastName"
-        label="Last Name"
+        :label="t('auth.register.lastName')"
+        variant="outlined"
+        rounded="lg"
+        density="comfortable"
         :rules="lastNameRules"
         :error-messages="backendErrors.lastName"
       />
     </div>
 
-    <BaseTextField
+    <v-text-field
       v-model="email"
       type="email"
-      label="Email"
+      :label="t('auth.register.email')"
       autocomplete="email"
+      variant="outlined"
+      rounded="lg"
+      density="comfortable"
+      prepend-inner-icon="mdi-email-outline"
       :rules="emailRules"
       :error-messages="backendErrors.email"
+      class="mb-1"
     />
 
-    <BaseTextField
+    <v-text-field
       v-model="username"
-      label="Username"
+      :label="t('auth.register.username')"
+      variant="outlined"
+      rounded="lg"
+      density="comfortable"
+      prepend-inner-icon="mdi-at"
       :rules="usernameRules"
       :error-messages="backendErrors.username"
+      class="mb-1"
     />
 
-    <BaseTextField
+    <v-text-field
       v-model="password"
       type="password"
-      label="Password"
+      :label="t('auth.register.password')"
       autocomplete="new-password"
+      variant="outlined"
+      rounded="lg"
+      density="comfortable"
+      prepend-inner-icon="mdi-lock-outline"
       :rules="passwordRules"
       :error-messages="backendErrors.password"
+      class="mb-1"
     />
 
-    <BaseTextField
+    <v-text-field
       v-model="confirmPassword"
       type="password"
-      label="Confirm password"
+      :label="t('auth.register.confirmPassword')"
       autocomplete="new-password"
+      variant="outlined"
+      rounded="lg"
+      density="comfortable"
+      prepend-inner-icon="mdi-lock-check-outline"
       :rules="confirmRules"
       :error-messages="backendErrors.confirmPassword"
+      class="mb-1"
     />
 
-    <BaseButton type="submit" block :loading="loading">
-      SIGN UP
-    </BaseButton>
+    <v-btn
+      type="submit"
+      color="primary"
+      size="large"
+      block
+      rounded="lg"
+      :loading="loading"
+      elevation="0"
+      class="submit-btn mt-2"
+    >
+      {{ t('auth.register.submit') }}
+      <v-icon end size="18">mdi-arrow-right</v-icon>
+    </v-btn>
   </v-form>
 </template>
 
-<style scoped src="@/styles/auth/register-form.css"></style>
+<style scoped>
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.submit-btn {
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  height: 48px;
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+  box-shadow: 0 4px 20px rgba(21, 101, 192, 0.28) !important;
+  transition: box-shadow 0.2s ease, transform 0.2s ease !important;
+}
+
+.submit-btn:hover {
+  box-shadow: 0 8px 28px rgba(21, 101, 192, 0.42) !important;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 480px) {
+  .name-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .auth-form {
+    flex: 1 1 auto;
+  }
+}
+</style>

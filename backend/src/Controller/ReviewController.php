@@ -161,6 +161,52 @@ final class ReviewController extends AbstractController
         return $this->json($this->toReadDTO($review));
     }
 
+    #[Route('/appointments/{id}/review', methods: ['DELETE'])]
+    public function delete(
+        int $id,
+        AppointmentRepository $appointmentRepository,
+        ReviewRepository $reviewRepository,
+        EntityManagerInterface $em,
+        Security $security
+    ): JsonResponse {
+        /** @var User|null $user */
+        $user = $security->getUser();
+
+        if (!$user) {
+            return $this->json(['error' => ['code' => 'AUTH_REQUIRED', 'message' => 'Authentication required.']], 401);
+        }
+
+        $appointment = $appointmentRepository->find($id);
+
+        if (!$appointment) {
+            return $this->json(['error' => ['code' => 'NOT_FOUND', 'message' => 'Appointment not found.']], 404);
+        }
+
+        if ($appointment->getUser()->getId() !== $user->getId()) {
+            return $this->json(['error' => ['code' => 'FORBIDDEN', 'message' => 'Access denied.']], 403);
+        }
+
+        $review = $reviewRepository->findByAppointment($id);
+
+        if (!$review) {
+            return $this->json([
+                'error' => [
+                    'code' => 'NOT_FOUND',
+                    'message' => 'No review found for this appointment.',
+                ],
+            ], 404);
+        }
+
+        if ($review->getAuthor()->getId() !== $user->getId()) {
+            return $this->json(['error' => ['code' => 'FORBIDDEN', 'message' => 'Access denied.']], 403);
+        }
+
+        $em->remove($review);
+        $em->flush();
+
+        return $this->json(null, 204);
+    }
+
     #[Route('/doctors/{id}/reviews', methods: ['GET'])]
     public function listForDoctor(
         int $id,
