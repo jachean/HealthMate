@@ -71,3 +71,8 @@ a {
   font-size: 14px;
   color: #7a8190;
 }
+
+.v-theme--healthmate-dark .app-tagline {
+  color: rgb(var(--v-theme-on-background));
+  opacity: 0.55;
+}

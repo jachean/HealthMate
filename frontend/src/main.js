@@ -16,6 +16,8 @@ import { aliases, mdi } from 'vuetify/iconsets/mdi'
 import i18n from './i18n'
 import './assets/main.css'
 
+const savedTheme = localStorage.getItem('hm_theme') || 'healthmate-dark'
+
 const vuetify = createVuetify({
   components,
   directives,
@@ -25,7 +27,7 @@ const vuetify = createVuetify({
     sets: { mdi },
   },
   theme: {
-    defaultTheme: 'healthmate',
+    defaultTheme: savedTheme,
     themes: {
       healthmate: {
         dark: false,
@@ -46,6 +48,27 @@ const vuetify = createVuetify({
           'on-secondary': '#FFFFFF',
           'on-background': '#1A2138',
           'on-surface': '#1A2138',
+        },
+      },
+      'healthmate-dark': {
+        dark: true,
+        colors: {
+          primary: '#42A5F5',
+          'primary-darken-1': '#1E88E5',
+          secondary: '#26A69A',
+          'secondary-darken-1': '#00897B',
+          accent: '#26A69A',
+          background: '#0F1422',
+          surface: '#1A2138',
+          'surface-variant': '#242D45',
+          error: '#EF5350',
+          warning: '#FFA726',
+          info: '#42A5F5',
+          success: '#66BB6A',
+          'on-primary': '#FFFFFF',
+          'on-secondary': '#FFFFFF',
+          'on-background': '#CDD5F3',
+          'on-surface': '#CDD5F3',
         },
       },
     },

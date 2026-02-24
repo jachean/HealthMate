@@ -8,6 +8,10 @@
   min-height: 100vh;
 }
 
+.v-theme--healthmate-dark .auth-main {
+  background: rgb(var(--v-theme-background));
+}
+
 /* ── Logo area ─────────────────────────────────────────────────────────────── */
 .app-title-wrapper {
   text-align: center;
@@ -71,6 +75,10 @@
   background: #fff;
 }
 
+.v-theme--healthmate-dark .form-side {
+  background: rgb(var(--v-theme-surface));
+}
+
 .auth-title {
   font-family: 'Outfit', sans-serif;
   margin: 0 0 6px;
@@ -82,12 +90,22 @@
   border-left: 2.5px solid #90caf9;
 }
 
+.v-theme--healthmate-dark .auth-title {
+  color: rgb(var(--v-theme-on-surface));
+  border-left-color: rgb(var(--v-theme-primary));
+}
+
 .auth-subtitle {
   margin: 0 0 28px;
   font-size: 14px;
   color: #718096;
   line-height: 1.5;
   padding-left: 14px;
+}
+
+.v-theme--healthmate-dark .auth-subtitle {
+  color: rgb(var(--v-theme-on-surface));
+  opacity: 0.6;
 }
 
 /* ── Blue side ─────────────────────────────────────────────────────────────── */

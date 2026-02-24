@@ -4,15 +4,13 @@ import PublicFooter from '@/components/layout/PublicFooter.vue'
 </script>
 
 <template>
-  <v-app>
-    <PublicTopBar />
+  <PublicTopBar />
 
-    <v-main class="public-main">
-      <router-view />
-    </v-main>
+  <v-main class="public-main">
+    <router-view />
+  </v-main>
 
-    <PublicFooter />
-  </v-app>
+  <PublicFooter />
 </template>
 
 <style scoped>

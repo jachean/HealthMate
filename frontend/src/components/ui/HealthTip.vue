@@ -28,6 +28,24 @@ defineProps({
   </Transition>
 </template>
 
+<style>
+/* ── Dark mode overrides ──────────────────────────────────────────────────── */
+/* Use element tag in selector to beat the scoped attribute specificity       */
+.v-theme--healthmate-dark div.tip-card {
+  background: rgb(var(--v-theme-surface));
+  border-color: rgba(66, 165, 245, 0.12);
+}
+
+.v-theme--healthmate-dark span.tip-label {
+  color: rgb(var(--v-theme-primary));
+}
+
+.v-theme--healthmate-dark p.tip-text {
+  color: rgb(var(--v-theme-on-surface));
+  opacity: 0.85;
+}
+</style>
+
 <style scoped>
 /* ── Card shell ────────────────────────────────────────────────────────────── */
 .tip-card {
