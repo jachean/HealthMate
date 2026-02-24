@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+import { useAppTheme } from '@/composables/useAppTheme'
 import AppLogo from '@/components/ui/AppLogo.vue'
 
 const route = useRoute()
@@ -44,6 +45,8 @@ function switchLocale(lang) {
 }
 
 const localeMenuOpen = ref(false)
+
+const { isDark, toggle: toggleTheme } = useAppTheme()
 </script>
 
 <template>
@@ -77,6 +80,17 @@ const localeMenuOpen = ref(false)
 
       <!-- Desktop auth + locale (hidden on mobile) -->
       <div class="toolbar-right d-none d-md-flex">
+        <!-- Dark mode toggle -->
+        <v-btn
+          icon
+          variant="text"
+          size="small"
+          :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+          @click="toggleTheme"
+        >
+          <v-icon size="20">{{ isDark ? 'mdi-white-balance-sunny' : 'mdi-weather-night' }}</v-icon>
+        </v-btn>
+
         <!-- Locale switcher -->
         <v-menu v-model="localeMenuOpen" location="bottom end">
           <template #activator="{ props }">
@@ -239,6 +253,21 @@ const localeMenuOpen = ref(false)
           <v-btn value="en" class="flex-grow-1"><span class="fi fi-gb mr-2"></span>EN</v-btn>
           <v-btn value="ro" class="flex-grow-1"><span class="fi fi-ro mr-2"></span>RO</v-btn>
         </v-btn-toggle>
+      </div>
+
+      <!-- Mobile dark mode toggle -->
+      <div class="pa-4 pt-2 pb-3">
+        <div class="text-caption text-medium-emphasis mb-2">Appearance</div>
+        <v-btn
+          :prepend-icon="isDark ? 'mdi-white-balance-sunny' : 'mdi-weather-night'"
+          variant="tonal"
+          :color="isDark ? 'warning' : 'primary'"
+          density="compact"
+          block
+          @click="toggleTheme"
+        >
+          {{ isDark ? 'Light mode' : 'Dark mode' }}
+        </v-btn>
       </div>
 
       <v-divider />

@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useAppTheme } from '@/composables/useAppTheme'
 import AppLogo from '@/components/ui/AppLogo.vue'
 
 defineProps({
@@ -12,6 +13,7 @@ defineProps({
 
 const { t, locale } = useI18n()
 const localeMenuOpen = ref(false)
+const { isDark, toggle: toggleTheme } = useAppTheme()
 
 function switchLocale(lang) {
   locale.value = lang
@@ -22,8 +24,21 @@ function switchLocale(lang) {
 <template>
   <v-main class="auth-main">
 
-    <!-- Locale switcher — top right corner -->
+    <!-- Top-right controls -->
     <div class="auth-locale-wrap">
+
+      <!-- Dark mode toggle -->
+      <v-btn
+        icon
+        size="small"
+        class="locale-btn theme-btn"
+        :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+        @click="toggleTheme"
+      >
+        <v-icon size="17">{{ isDark ? 'mdi-white-balance-sunny' : 'mdi-weather-night' }}</v-icon>
+      </v-btn>
+
+      <!-- Locale switcher -->
       <v-menu v-model="localeMenuOpen" location="bottom end">
         <template #activator="{ props }">
           <v-btn
@@ -78,6 +93,15 @@ function switchLocale(lang) {
   </v-main>
 </template>
 
+<style>
+/* Dark mode overrides for auth locale/theme buttons (non-scoped for theme selector access) */
+.v-theme--healthmate-dark .auth-locale-wrap .locale-btn {
+  color: rgb(var(--v-theme-on-surface));
+  background: rgba(26, 33, 56, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+</style>
+
 <style scoped>
 /* ── Locale switcher ───────────────────────────────────────────────────────── */
 .auth-locale-wrap {
@@ -85,6 +109,16 @@ function switchLocale(lang) {
   top: 16px;
   right: 20px;
   z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-btn {
+  width: 36px;
+  height: 36px;
+  min-width: unset;
+  padding: 0 !important;
 }
 
 .locale-btn {
