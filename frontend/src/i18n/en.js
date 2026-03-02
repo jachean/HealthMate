@@ -117,6 +117,7 @@ export default {
     noSlots: 'No available appointments',
     noSlotsHint: 'Please check back later.',
     noSlotsDay: 'No time slots available for this day.',
+    stepSpecialty: 'Choose a specialty',
     step1: 'Choose a service',
     step2: 'Select a day',
     step3: 'Choose a time',

@@ -25,7 +25,7 @@ class MedicalService
     #[ORM\Column(length: 150)]
     private string $slug;
 
-    #[Groups(['medical_service:list'])]
+    #[Groups(['medical_service:list', 'doctor_service:list'])]
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: true)]
     private ?Specialty $specialty = null;
