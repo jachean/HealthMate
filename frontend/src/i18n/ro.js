@@ -117,6 +117,7 @@ export default {
     noSlots: 'Nicio programare disponibilă',
     noSlotsHint: 'Te rugăm să revii mai târziu.',
     noSlotsDay: 'Niciun interval orar disponibil pentru această zi.',
+    stepSpecialty: 'Alege o specialitate',
     step1: 'Alege un serviciu',
     step2: 'Selectează o zi',
     step3: 'Alege o oră',

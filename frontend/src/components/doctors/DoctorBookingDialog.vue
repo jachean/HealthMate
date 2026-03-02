@@ -29,6 +29,7 @@ const booking = ref(false)
 const services = ref([])
 const slots = ref([])
 const selectedService = ref(null)
+const selectedSpecialty = ref(null)
 const selectedDay = ref(null)
 const selectedSlot = ref(null)
 const error = ref(null)
@@ -65,6 +66,16 @@ const slotsForSelectedDay = computed(() => {
   return slots.value.filter(s => isoToDateKey(s.startAt) === selectedDay.value)
 })
 
+const availableSpecialties = computed(() => props.doctor.specialties ?? [])
+
+const filteredServices = computed(() => {
+  if (!selectedSpecialty.value) return services.value
+  return services.value.filter(s => {
+    const sp = s.medicalService?.specialty
+    return !sp || sp.slug === selectedSpecialty.value.slug
+  })
+})
+
 const canConfirm = computed(() => selectedService.value && selectedSlot.value && !booking.value)
 
 const errorMessage = computed(() => {
@@ -91,6 +102,13 @@ watch(selectedDay, () => {
   selectedSlot.value = null
 })
 
+watch(selectedSpecialty, () => {
+  selectedService.value = null
+  selectedDay.value = null
+  selectedSlot.value = null
+  slots.value = []
+})
+
 watch(selectedService, () => {
   selectedDay.value = null
   selectedSlot.value = null
@@ -100,6 +118,16 @@ watch(selectedService, () => {
 })
 
 // Methods
+function specialtyName(specialty) {
+  const slug = specialty?.slug
+  if (slug) {
+    const key = `specialty.${slug}`
+    const translated = t(key)
+    if (translated !== key) return translated
+  }
+  return specialty?.name || ''
+}
+
 function serviceName(service) {
   const slug = service.medicalService?.slug
   if (slug) {
@@ -114,6 +142,7 @@ async function loadServices() {
   loading.value = true
   error.value = null
   services.value = []
+  selectedSpecialty.value = null
   selectedService.value = null
   slots.value = []
   selectedDay.value = null
@@ -122,6 +151,9 @@ async function loadServices() {
   try {
     const { data } = await api.get(`/api/doctors/${props.doctor.id}/services`)
     services.value = Array.isArray(data) ? data : []
+    if (availableSpecialties.value.length === 1) {
+      selectedSpecialty.value = availableSpecialties.value[0]
+    }
   } catch {
     error.value = 'LOAD_FAILED'
   } finally {
@@ -293,16 +325,36 @@ function formatPrice(price) {
 
           <!-- Booking Flow -->
           <template v-else>
-            <!-- Step 1: Select Service -->
-            <div class="booking-step">
+            <!-- Step 1: Select Specialty -->
+            <div v-if="availableSpecialties.length > 0" class="booking-step">
               <div class="step-header">
                 <span class="step-number">1</span>
+                <span class="step-title">{{ t('booking.stepSpecialty') }}</span>
+              </div>
+              <div class="day-chips">
+                <v-chip
+                  v-for="sp in availableSpecialties"
+                  :key="sp.slug"
+                  :color="selectedSpecialty?.slug === sp.slug ? 'primary' : undefined"
+                  :variant="selectedSpecialty?.slug === sp.slug ? 'flat' : 'outlined'"
+                  @click="selectedSpecialty = sp"
+                  class="day-chip"
+                >
+                  {{ specialtyName(sp) }}
+                </v-chip>
+              </div>
+            </div>
+
+            <!-- Step 2: Select Service -->
+            <div v-if="availableSpecialties.length === 0 || selectedSpecialty" class="booking-step">
+              <div class="step-header">
+                <span class="step-number">{{ availableSpecialties.length > 0 ? 2 : 1 }}</span>
                 <span class="step-title">{{ t('booking.step1') }}</span>
               </div>
 
               <div class="services-list">
                 <button
-                  v-for="service in services"
+                  v-for="service in filteredServices"
                   :key="service.id"
                   type="button"
                   class="service-btn"
@@ -321,7 +373,7 @@ function formatPrice(price) {
               </div>
             </div>
 
-            <!-- Step 2: Select Day (only after service is selected) -->
+            <!-- Step 3/2: Select Day (only after service is selected) -->
             <template v-if="selectedService">
               <div v-if="loadingSlots" class="loading-state" style="padding: 24px;">
                 <v-progress-circular indeterminate color="primary" size="32" />
@@ -331,7 +383,7 @@ function formatPrice(price) {
               <template v-else-if="dayOptions.length > 0">
                 <div class="booking-step">
                   <div class="step-header">
-                    <span class="step-number">2</span>
+                    <span class="step-number">{{ availableSpecialties.length > 0 ? 3 : 2 }}</span>
                     <span class="step-title">{{ t('booking.step2') }}</span>
                   </div>
 
@@ -349,10 +401,10 @@ function formatPrice(price) {
                   </div>
                 </div>
 
-                <!-- Step 3: Select Time -->
+                <!-- Step 4/3: Select Time -->
                 <div class="booking-step">
                   <div class="step-header">
-                    <span class="step-number">3</span>
+                    <span class="step-number">{{ availableSpecialties.length > 0 ? 4 : 3 }}</span>
                     <span class="step-title">{{ t('booking.step3') }}</span>
                   </div>
 

@@ -24,6 +24,8 @@ class DoctorServiceRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('ds')
             ->innerJoin('ds.medicalService', 'ms')
             ->addSelect('ms')
+            ->leftJoin('ms.specialty', 'spec')
+            ->addSelect('spec')
             ->andWhere('ds.doctor = :doctorId')
             ->setParameter('doctorId', $doctorId)
             ->orderBy('ms.name', 'ASC')
