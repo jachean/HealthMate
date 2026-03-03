@@ -8,7 +8,6 @@ use App\Entity\Doctor;
 use App\Entity\DoctorService;
 use App\Entity\MedicalService;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +17,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/admin')]
 #[IsGranted('ROLE_ADMIN')]
-class AdminDoctorServiceController extends AbstractController
+class AdminDoctorServiceController extends AdminController
 {
     public function __construct(
         private EntityManagerInterface $em,
@@ -102,7 +101,7 @@ class AdminDoctorServiceController extends AbstractController
         $body = json_decode($request->getContent(), true) ?? [];
 
         $dto = new DoctorServiceDTO();
-        $dto->medicalServiceId = $doctorService->getMedicalService()->getId();
+        $dto->medicalServiceId = (int) $doctorService->getMedicalService()->getId();
         $dto->price = $body['price'] ?? '';
         $dto->durationMinutes = $body['durationMinutes'] ?? 0;
 
@@ -154,14 +153,5 @@ class AdminDoctorServiceController extends AbstractController
         $this->em->flush();
 
         return new Response(null, Response::HTTP_NO_CONTENT);
-    }
-
-    private function formatErrors(\Symfony\Component\Validator\ConstraintViolationListInterface $errors): array
-    {
-        $result = [];
-        foreach ($errors as $error) {
-            $result[$error->getPropertyPath()] = $error->getMessage();
-        }
-        return $result;
     }
 }

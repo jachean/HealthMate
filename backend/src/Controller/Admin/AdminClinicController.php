@@ -5,7 +5,6 @@ namespace App\Controller\Admin;
 use App\DTO\ClinicDTO;
 use App\Entity\Clinic;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +14,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/admin/clinics')]
 #[IsGranted('ROLE_ADMIN')]
-class AdminClinicController extends AbstractController
+class AdminClinicController extends AdminController
 {
     public function __construct(
         private EntityManagerInterface $em,
@@ -87,14 +86,5 @@ class AdminClinicController extends AbstractController
         $this->em->flush();
 
         return $this->json($clinic, Response::HTTP_OK, [], ['groups' => ['admin:clinic:list']]);
-    }
-
-    private function formatErrors(\Symfony\Component\Validator\ConstraintViolationListInterface $errors): array
-    {
-        $result = [];
-        foreach ($errors as $error) {
-            $result[$error->getPropertyPath()] = $error->getMessage();
-        }
-        return $result;
     }
 }
