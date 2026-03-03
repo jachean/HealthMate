@@ -172,6 +172,12 @@ const { isDark, toggle: toggleTheme } = useAppTheme()
                 :to="{ name: 'me' }"
               />
               <v-list-item
+                v-if="auth.isAdmin"
+                prepend-icon="mdi-shield-crown"
+                :title="t('admin.nav.panel')"
+                :to="{ name: 'admin-doctors' }"
+              />
+              <v-list-item
                 :title="t('nav.logout')"
                 @click="logout"
               />

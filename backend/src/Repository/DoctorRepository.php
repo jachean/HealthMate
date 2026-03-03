@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Doctor;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -66,5 +67,36 @@ class DoctorRepository extends ServiceEntityRepository
             ->addOrderBy('d.firstName', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    public function findAllPaginatedForAdmin(int $page, int $limit, ?string $search): array
+    {
+        $qb = $this->createQueryBuilder('d')
+            ->leftJoin('d.clinic', 'c')
+            ->leftJoin('d.specialties', 's')
+            ->leftJoin('d.doctorServices', 'ds')
+            ->addSelect('c', 's', 'ds');
+
+        if ($search !== null && $search !== '') {
+            $qb->andWhere(
+                $qb->expr()->orX(
+                    $qb->expr()->like('LOWER(d.firstName)', ':search'),
+                    $qb->expr()->like('LOWER(d.lastName)', ':search'),
+                    $qb->expr()->like('LOWER(c.name)', ':search')
+                )
+            )->setParameter('search', '%' . strtolower($search) . '%');
+        }
+
+        $qb->orderBy('d.lastName', 'ASC')
+            ->addOrderBy('d.firstName', 'ASC')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        $paginator = new Paginator($qb, fetchJoinCollection: true);
+
+        return [
+            'data' => iterator_to_array($paginator),
+            'total' => count($paginator),
+        ];
     }
 }

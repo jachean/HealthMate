@@ -11,24 +11,25 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: ClinicRepository::class)]
 class Clinic
 {
-    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail'])]
+    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail', 'admin:clinic:list'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail'])]
+    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail', 'admin:clinic:list'])]
     #[ORM\Column(length: 255)]
     private string $name;
 
+    #[Groups(['admin:clinic:list'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
 
-    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail'])]
+    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail', 'admin:clinic:list'])]
     #[ORM\Column(length: 255)]
     private string $address;
 
-    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail'])]
+    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail', 'admin:clinic:list'])]
     #[ORM\Column(length: 100)]
     private string $city;
 

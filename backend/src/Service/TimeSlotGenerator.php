@@ -38,6 +38,32 @@ final class TimeSlotGenerator
         $this->generateFutureSlots();
     }
 
+    public function generateForDoctor(Doctor $doctor): void
+    {
+        $today = new \DateTimeImmutable('today');
+
+        for ($day = 0; $day < self::DAYS_AHEAD; $day++) {
+            $date = $today->modify("+{$day} days");
+            $startOfDay = $date->setTime(self::DAY_START_HOUR, 0);
+            $endOfDay   = $date->setTime(self::DAY_END_HOUR, 0);
+
+            for (
+                $cursor = $startOfDay;
+                $cursor->modify('+' . self::SLOT_DURATION_MINUTES . ' minutes') <= $endOfDay;
+                $cursor = $cursor->modify('+' . self::SLOT_STEP_MINUTES . ' minutes')
+            ) {
+                $slot = new TimeSlot();
+                $slot->setDoctor($doctor);
+                $slot->setStartAt($cursor);
+                $slot->setEndAt($cursor->modify('+' . self::SLOT_DURATION_MINUTES . ' minutes'));
+                $slot->setIsBooked(false);
+                $this->em->persist($slot);
+            }
+        }
+
+        $this->em->flush();
+    }
+
     private function generateFutureSlots(): void
     {
         $doctors = $this->doctorRepository->findBy(['isActive' => true]);

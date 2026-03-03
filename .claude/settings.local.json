@@ -23,7 +23,9 @@
       "Bash(php bin/console:*)",
       "Bash(composer require:*)",
       "Bash(composer phpcs:*)",
-      "Bash(php -r:*)"
+      "Bash(php -r:*)",
+      "Bash(vendor/bin/phpcbf:*)",
+      "Bash(composer phpunit:*)"
     ]
   }
 }
