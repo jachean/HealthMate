@@ -32,13 +32,7 @@ class AdminClinicController extends AdminController
     #[Route('', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
-        $body = json_decode($request->getContent(), true) ?? [];
-
-        $dto = new ClinicDTO();
-        $dto->name = $body['name'] ?? '';
-        $dto->description = $body['description'] ?? null;
-        $dto->address = $body['address'] ?? '';
-        $dto->city = $body['city'] ?? '';
+        $dto = $this->buildDtoFromRequest($request);
 
         $errors = $this->validator->validate($dto);
         if (count($errors) > 0) {
@@ -65,13 +59,7 @@ class AdminClinicController extends AdminController
             return $this->json(['error' => 'Clinic not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $body = json_decode($request->getContent(), true) ?? [];
-
-        $dto = new ClinicDTO();
-        $dto->name = $body['name'] ?? '';
-        $dto->description = $body['description'] ?? null;
-        $dto->address = $body['address'] ?? '';
-        $dto->city = $body['city'] ?? '';
+        $dto = $this->buildDtoFromRequest($request);
 
         $errors = $this->validator->validate($dto);
         if (count($errors) > 0) {
@@ -86,5 +74,18 @@ class AdminClinicController extends AdminController
         $this->em->flush();
 
         return $this->json($clinic, Response::HTTP_OK, [], ['groups' => ['admin:clinic:list']]);
+    }
+
+    private function buildDtoFromRequest(Request $request): ClinicDTO
+    {
+        $body = json_decode($request->getContent(), true) ?? [];
+
+        $dto = new ClinicDTO();
+        $dto->name = $body['name'] ?? '';
+        $dto->description = $body['description'] ?? null;
+        $dto->address = $body['address'] ?? '';
+        $dto->city = $body['city'] ?? '';
+
+        return $dto;
     }
 }

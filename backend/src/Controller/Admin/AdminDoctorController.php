@@ -46,16 +46,7 @@ class AdminDoctorController extends AdminController
     #[Route('', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
-        $body = json_decode($request->getContent(), true) ?? [];
-
-        $dto = new DoctorDTO();
-        $dto->firstName = $body['firstName'] ?? '';
-        $dto->lastName = $body['lastName'] ?? '';
-        $dto->bio = $body['bio'] ?? null;
-        $dto->acceptsInsurance = $body['acceptsInsurance'] ?? false;
-        $dto->isActive = $body['isActive'] ?? true;
-        $dto->clinicId = $body['clinicId'] ?? 0;
-        $dto->specialtyIds = $body['specialtyIds'] ?? [];
+        $dto = $this->buildDtoFromRequest($request);
 
         $errors = $this->validator->validate($dto);
         if (count($errors) > 0) {
@@ -67,13 +58,9 @@ class AdminDoctorController extends AdminController
             return $this->json(['error' => 'Clinic not found'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $specialties = [];
-        foreach ($dto->specialtyIds as $sid) {
-            $specialty = $this->em->getRepository(\App\Entity\Specialty::class)->find($sid);
-            if (!$specialty) {
-                return $this->json(['error' => "Specialty $sid not found"], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-            $specialties[] = $specialty;
+        $specialties = $this->resolveSpecialties($dto->specialtyIds);
+        if ($specialties instanceof JsonResponse) {
+            return $specialties;
         }
 
         $doctor = new Doctor();
@@ -103,16 +90,7 @@ class AdminDoctorController extends AdminController
             return $this->json(['error' => 'Doctor not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $body = json_decode($request->getContent(), true) ?? [];
-
-        $dto = new DoctorDTO();
-        $dto->firstName = $body['firstName'] ?? '';
-        $dto->lastName = $body['lastName'] ?? '';
-        $dto->bio = $body['bio'] ?? null;
-        $dto->acceptsInsurance = $body['acceptsInsurance'] ?? false;
-        $dto->isActive = $body['isActive'] ?? true;
-        $dto->clinicId = $body['clinicId'] ?? 0;
-        $dto->specialtyIds = $body['specialtyIds'] ?? [];
+        $dto = $this->buildDtoFromRequest($request);
 
         $errors = $this->validator->validate($dto);
         if (count($errors) > 0) {
@@ -124,13 +102,9 @@ class AdminDoctorController extends AdminController
             return $this->json(['error' => 'Clinic not found'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $specialties = [];
-        foreach ($dto->specialtyIds as $sid) {
-            $specialty = $this->em->getRepository(\App\Entity\Specialty::class)->find($sid);
-            if (!$specialty) {
-                return $this->json(['error' => "Specialty $sid not found"], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-            $specialties[] = $specialty;
+        $specialties = $this->resolveSpecialties($dto->specialtyIds);
+        if ($specialties instanceof JsonResponse) {
+            return $specialties;
         }
 
         $doctor->setFirstName($dto->firstName);
@@ -150,5 +124,38 @@ class AdminDoctorController extends AdminController
         $this->em->flush();
 
         return $this->json($doctor, Response::HTTP_OK, [], ['groups' => ['doctor:list']]);
+    }
+
+    private function buildDtoFromRequest(Request $request): DoctorDTO
+    {
+        $body = json_decode($request->getContent(), true) ?? [];
+
+        $dto = new DoctorDTO();
+        $dto->firstName = $body['firstName'] ?? '';
+        $dto->lastName = $body['lastName'] ?? '';
+        $dto->bio = $body['bio'] ?? null;
+        $dto->acceptsInsurance = $body['acceptsInsurance'] ?? false;
+        $dto->isActive = $body['isActive'] ?? true;
+        $dto->clinicId = $body['clinicId'] ?? 0;
+        $dto->specialtyIds = $body['specialtyIds'] ?? [];
+
+        return $dto;
+    }
+
+    /**
+     * @param int[] $specialtyIds
+     * @return \App\Entity\Specialty[]|JsonResponse
+     */
+    private function resolveSpecialties(array $specialtyIds): array|JsonResponse
+    {
+        $specialties = [];
+        foreach ($specialtyIds as $sid) {
+            $specialty = $this->em->getRepository(\App\Entity\Specialty::class)->find($sid);
+            if (!$specialty) {
+                return $this->json(['error' => "Specialty $sid not found"], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+            $specialties[] = $specialty;
+        }
+        return $specialties;
     }
 }

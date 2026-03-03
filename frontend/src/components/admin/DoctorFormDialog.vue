@@ -386,10 +386,10 @@ async function deleteService(ds, index) {
                 <v-table density="compact" v-if="pendingServices.length > 0">
                   <thead>
                     <tr>
-                      <th>{{ t('admin.services.service') }}</th>
-                      <th>{{ t('admin.services.price') }}</th>
-                      <th>{{ t('admin.services.duration') }}</th>
-                      <th></th>
+                      <th scope="col">{{ t('admin.services.service') }}</th>
+                      <th scope="col">{{ t('admin.services.price') }}</th>
+                      <th scope="col">{{ t('admin.services.duration') }}</th>
+                      <th scope="col"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -416,10 +416,10 @@ async function deleteService(ds, index) {
                 <v-table density="compact" v-if="doctorServices.length > 0">
                   <thead>
                     <tr>
-                      <th>{{ t('admin.services.service') }}</th>
-                      <th>{{ t('admin.services.price') }}</th>
-                      <th>{{ t('admin.services.duration') }}</th>
-                      <th></th>
+                      <th scope="col">{{ t('admin.services.service') }}</th>
+                      <th scope="col">{{ t('admin.services.price') }}</th>
+                      <th scope="col">{{ t('admin.services.duration') }}</th>
+                      <th scope="col"></th>
                     </tr>
                   </thead>
                   <tbody>
