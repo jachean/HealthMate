@@ -38,6 +38,12 @@ final class TimeSlotGenerator
         $this->generateFutureSlots();
     }
 
+    public function generateForDoctor(Doctor $doctor): void
+    {
+        $this->generateSlotsForDoctor($doctor, []);
+        $this->em->flush();
+    }
+
     private function generateFutureSlots(): void
     {
         $doctors = $this->doctorRepository->findBy(['isActive' => true]);

@@ -23,6 +23,7 @@ class UserController extends AbstractController
             'username' => $user->getDisplayUsername(),
             'firstName' => $user->getFirstName(),
             'lastName' => $user->getLastName(),
+            'roles' => $user->getRoles(),
         ]);
     }
 }

@@ -52,6 +52,17 @@ const router = createRouter({
 
     { path: '/login', name: 'login', component: AuthView },
     { path: '/register', name: 'register', component: AuthView },
+
+    {
+      path: '/admin',
+      component: () => import('@/components/layout/AdminLayout.vue'),
+      meta: { requiresAdmin: true },
+      children: [
+        { path: '', redirect: '/admin/doctors' },
+        { path: 'doctors', name: 'admin-doctors', component: () => import('@/views/admin/AdminDoctorsView.vue') },
+        { path: 'clinics', name: 'admin-clinics', component: () => import('@/views/admin/AdminClinicsView.vue') },
+      ],
+    },
   ],
 })
 
@@ -64,6 +75,11 @@ router.beforeEach(async (to) => {
 
   if (to.meta.requiresAuth && !auth.token) {
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  if (to.meta.requiresAdmin) {
+    if (!auth.token) return { name: 'login', query: { redirect: to.fullPath } }
+    if (!auth.isAdmin) return { name: 'home' }
   }
 })
 
