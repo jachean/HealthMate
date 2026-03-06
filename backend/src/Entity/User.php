@@ -31,10 +31,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $lastName = '';
 
     #[ORM\Column]
-    private array $roles = [];
-
-    #[ORM\Column]
     private string $password = '';
+
+    #[ORM\Column(options: ['default' => true])]
+    private bool $isActive = true;
 
     /**
      * @var Collection<int, Appointment>
@@ -48,10 +48,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Review::class, mappedBy: 'author')]
     private Collection $reviews;
 
+    /**
+     * @var Collection<int, UserRole>
+     */
+    #[ORM\OneToMany(
+        targetEntity: UserRole::class,
+        mappedBy: 'user',
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
+    private Collection $userRoles;
+
     public function __construct()
     {
         $this->appointments = new ArrayCollection();
         $this->reviews = new ArrayCollection();
+        $this->userRoles = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -115,13 +127,50 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        return array_unique([...$this->roles, 'ROLE_USER']);
+        $roles = $this->userRoles->map(fn(UserRole $ur) => $ur->getRole())->toArray();
+        $roles[] = 'ROLE_USER';
+        return array_unique($roles);
     }
 
-    public function setRoles(array $roles): static
+    public function addRole(string $role, ?Clinic $clinic = null): static
     {
-        $this->roles = $roles;
+        foreach ($this->userRoles as $userRole) {
+            if ($userRole->getRole() === $role && $userRole->getClinic() === $clinic) {
+                return $this;
+            }
+        }
+
+        $userRole = new UserRole();
+        $userRole->setUser($this);
+        $userRole->setRole($role);
+        $userRole->setClinic($clinic);
+        $this->userRoles->add($userRole);
+
         return $this;
+    }
+
+    /**
+     * Removes a role from this user. The caller must flush a managed entity
+     * for orphanRemoval to delete the row from the database.
+     */
+    public function removeRole(string $role, ?Clinic $clinic = null): static
+    {
+        foreach ($this->userRoles as $userRole) {
+            if ($userRole->getRole() === $role && $userRole->getClinic() === $clinic) {
+                $this->userRoles->removeElement($userRole);
+                return $this;
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, UserRole>
+     */
+    public function getUserRoles(): Collection
+    {
+        return $this->userRoles;
     }
 
     public function getPassword(): string
@@ -132,6 +181,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): static
     {
         $this->password = $password;
+        return $this;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): static
+    {
+        $this->isActive = $isActive;
         return $this;
     }
 

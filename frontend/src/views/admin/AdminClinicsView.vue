@@ -2,9 +2,11 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { adminGetClinics } from '@/services/adminService'
+import { useAuthStore } from '@/stores/auth'
 import ClinicFormDialog from '@/components/admin/ClinicFormDialog.vue'
 
 const { t } = useI18n()
+const auth = useAuthStore()
 
 const clinics = ref([])
 const loading = ref(false)
@@ -61,7 +63,7 @@ onMounted(fetchClinics)
           <div class="text-body-2 text-medium-emphasis">{{ clinics.length }} {{ t('admin.clinics.total') }}</div>
         </div>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreate">
+      <v-btn v-if="!auth.isClinicAdmin" color="primary" prepend-icon="mdi-plus" @click="openCreate">
         {{ t('admin.clinics.addClinic') }}
       </v-btn>
     </div>

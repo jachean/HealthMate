@@ -27,6 +27,65 @@ class AppointmentRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function findAllPaginatedForAdmin(int $page, int $limit, array $filters): array
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->join('a.timeSlot', 'ts')
+            ->join('ts.doctor', 'd')
+            ->join('d.clinic', 'c')
+            ->join('a.user', 'u')
+            ->join('a.doctorService', 'ds')
+            ->join('ds.medicalService', 'ms')
+            ->orderBy('ts.startAt', 'DESC');
+
+        if (!empty($filters['dateFrom'])) {
+            $from = \DateTimeImmutable::createFromFormat('Y-m-d', (string) $filters['dateFrom']);
+            if ($from !== false) {
+                $qb->andWhere('ts.startAt >= :dateFrom')
+                    ->setParameter('dateFrom', $from->setTime(0, 0));
+            }
+        }
+
+        if (!empty($filters['dateTo'])) {
+            $to = \DateTimeImmutable::createFromFormat('Y-m-d', (string) $filters['dateTo']);
+            if ($to !== false) {
+                $qb->andWhere('ts.startAt <= :dateTo')
+                    ->setParameter('dateTo', $to->setTime(23, 59, 59));
+            }
+        }
+
+        if (!empty($filters['doctorId'])) {
+            $qb->andWhere('d.id = :doctorId')
+                ->setParameter('doctorId', (int) $filters['doctorId']);
+        }
+
+        if (!empty($filters['clinicId'])) {
+            $qb->andWhere('c.id = :clinicId')
+                ->setParameter('clinicId', (int) $filters['clinicId']);
+        }
+
+        if (!empty($filters['status'])) {
+            $qb->andWhere('a.status = :status')
+                ->setParameter('status', (string) $filters['status']);
+        }
+
+        if (!empty($filters['patient'])) {
+            $qb->andWhere(
+                'LOWER(CONCAT(u.firstName, \' \', u.lastName)) LIKE :patient OR LOWER(u.email) LIKE :patient'
+            )->setParameter('patient', '%' . mb_strtolower((string) $filters['patient']) . '%');
+        }
+
+        $total = (int) (clone $qb)->select('COUNT(a.id)')->getQuery()->getSingleScalarResult();
+
+        $data = $qb
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return ['data' => $data, 'total' => $total];
+    }
+
     public function findForUserOrderedByStartAt(User $user): array
     {
         return $this->createQueryBuilder('a')

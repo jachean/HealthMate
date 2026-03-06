@@ -20,6 +20,35 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
+     * @return array{data: User[], total: int}
+     */
+    public function findAllPaginatedForAdmin(int $page, int $limit, array $filters): array
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->orderBy('u.id', 'ASC');
+
+        if (!empty($filters['search'])) {
+            $search = '%' . mb_strtolower((string) $filters['search']) . '%';
+            $qb->andWhere(
+                'LOWER(CONCAT(u.firstName, \' \', u.lastName)) LIKE :search OR LOWER(u.email) LIKE :search'
+            )->setParameter('search', $search);
+        }
+
+        $total = (int) (clone $qb)
+            ->select('COUNT(u.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $data = $qb
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return ['data' => $data, 'total' => $total];
+    }
+
+    /**
      * Used to upgrade (rehash) the user's password automatically over time.
      */
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void

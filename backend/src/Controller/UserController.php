@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\UserRole;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -17,6 +18,15 @@ class UserController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
+        $clinicAdminClinicId = null;
+        foreach ($user->getUserRoles() as $userRole) {
+            /** @var UserRole $userRole */
+            if ($userRole->getRole() === 'ROLE_CLINIC_ADMIN' && $userRole->getClinic() !== null) {
+                $clinicAdminClinicId = $userRole->getClinic()->getId();
+                break;
+            }
+        }
+
         return $this->json([
             'id' => $user->getId(),
             'email' => $user->getEmail(),
@@ -24,6 +34,7 @@ class UserController extends AbstractController
             'firstName' => $user->getFirstName(),
             'lastName' => $user->getLastName(),
             'roles' => $user->getRoles(),
+            'clinicAdminClinicId' => $clinicAdminClinicId,
         ]);
     }
 }

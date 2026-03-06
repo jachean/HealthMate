@@ -3,10 +3,13 @@
 namespace App\Controller\Admin;
 
 use App\DTO\DoctorServiceDTO;
+use App\DTO\MedicalServiceDTO;
 use App\Entity\Appointment;
 use App\Entity\Doctor;
 use App\Entity\DoctorService;
 use App\Entity\MedicalService;
+use App\Entity\Specialty;
+use App\Service\ClinicAdminContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,12 +19,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/admin')]
-#[IsGranted('ROLE_ADMIN')]
+#[IsGranted('ROLE_CLINIC_ADMIN')]
 class AdminDoctorServiceController extends AdminController
 {
     public function __construct(
         private EntityManagerInterface $em,
         private ValidatorInterface $validator,
+        private ClinicAdminContext $ctx,
     ) {
     }
 
@@ -32,12 +36,82 @@ class AdminDoctorServiceController extends AdminController
         return $this->json($services, 200, [], ['groups' => ['medical_service:list']]);
     }
 
+    #[Route('/medical-services', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function createMedicalService(Request $request): JsonResponse
+    {
+        $body = json_decode($request->getContent(), true) ?? [];
+        $dto  = $this->buildMedicalServiceDto($body);
+
+        $errors = $this->validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->json(['errors' => $this->formatErrors($errors)], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $service = new MedicalService();
+        $service->setName($dto->name);
+        $service->setSlug($dto->slug);
+        $service->setSpecialty($this->resolveSpecialty($dto->specialtyId));
+
+        $this->em->persist($service);
+        $this->em->flush();
+
+        return $this->json($service, Response::HTTP_CREATED, [], ['groups' => ['medical_service:list']]);
+    }
+
+    #[Route('/medical-services/{id}', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function deleteMedicalService(int $id): Response
+    {
+        $service = $this->em->getRepository(MedicalService::class)->find($id);
+        if (!$service) {
+            return $this->json(['error' => 'Medical service not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $doctorServices = $this->em->getRepository(DoctorService::class)->findBy(['medicalService' => $service]);
+        if (count($doctorServices) > 0) {
+            return $this->json(
+                ['error' => 'Cannot delete: this service is assigned to one or more doctors'],
+                Response::HTTP_CONFLICT
+            );
+        }
+
+        $this->em->remove($service);
+        $this->em->flush();
+
+        return new Response(null, Response::HTTP_NO_CONTENT);
+    }
+
+    private function buildMedicalServiceDto(array $body): MedicalServiceDTO
+    {
+        $dto             = new MedicalServiceDTO();
+        $dto->name       = trim((string) ($body['name'] ?? ''));
+        $dto->slug       = trim((string) ($body['slug'] ?? ''));
+        $dto->specialtyId = isset($body['specialtyId']) ? (int) $body['specialtyId'] : null;
+
+        return $dto;
+    }
+
+    private function resolveSpecialty(?int $id): ?Specialty
+    {
+        if ($id === null) {
+            return null;
+        }
+
+        return $this->em->getRepository(Specialty::class)->find($id);
+    }
+
     #[Route('/doctors/{id}/services', methods: ['GET'])]
     public function listDoctorServices(int $id): JsonResponse
     {
         $doctor = $this->em->getRepository(Doctor::class)->find($id);
         if (!$doctor) {
             return $this->json(['error' => 'Doctor not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $scopedClinic = $this->ctx->getClinic();
+        if ($scopedClinic !== null && $doctor->getClinic()->getId() !== $scopedClinic->getId()) {
+            return $this->json(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
         $services = $this->em->getRepository(DoctorService::class)->findBy(['doctor' => $doctor]);
@@ -50,6 +124,11 @@ class AdminDoctorServiceController extends AdminController
         $doctor = $this->em->getRepository(Doctor::class)->find($id);
         if (!$doctor) {
             return $this->json(['error' => 'Doctor not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $scopedClinic = $this->ctx->getClinic();
+        if ($scopedClinic !== null && $doctor->getClinic()->getId() !== $scopedClinic->getId()) {
+            return $this->json(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
         $body = json_decode($request->getContent(), true) ?? [];
@@ -98,6 +177,11 @@ class AdminDoctorServiceController extends AdminController
             return $this->json(['error' => 'Doctor service not found'], Response::HTTP_NOT_FOUND);
         }
 
+        $scopedClinic = $this->ctx->getClinic();
+        if ($scopedClinic !== null && $doctorService->getDoctor()->getClinic()->getId() !== $scopedClinic->getId()) {
+            return $this->json(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
         $body = json_decode($request->getContent(), true) ?? [];
 
         $dto = new DoctorServiceDTO();
@@ -124,6 +208,11 @@ class AdminDoctorServiceController extends AdminController
         $doctorService = $this->em->getRepository(DoctorService::class)->find($id);
         if (!$doctorService) {
             return $this->json(['error' => 'Doctor service not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $scopedClinic = $this->ctx->getClinic();
+        if ($scopedClinic !== null && $doctorService->getDoctor()->getClinic()->getId() !== $scopedClinic->getId()) {
+            return $this->json(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
         // Check for future active appointments

@@ -38,11 +38,13 @@ const submitLogin = async () => {
     return
   }
 
-  const ok = await login(loginEmail.value, loginPassword.value)
+  const { ok, deactivated } = await login(loginEmail.value, loginPassword.value)
   loading.value = false
 
   if (!ok) {
-    formError.value = t('auth.login.invalidCredentials')
+    formError.value = deactivated
+      ? t('auth.login.accountDeactivated')
+      : t('auth.login.invalidCredentials')
     return
   }
 

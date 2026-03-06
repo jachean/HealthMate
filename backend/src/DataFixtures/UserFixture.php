@@ -44,7 +44,7 @@ final class UserFixture extends Fixture
             $user->setPassword($this->passwordHasher->hashPassword($user, 'password'));
 
             if ($data['username'] === 'admin') {
-                $user->setRoles(['ROLE_ADMIN']);
+                $user->addRole('ROLE_ADMIN');
             }
 
             $manager->persist($user);

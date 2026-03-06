@@ -72,6 +72,13 @@ a {
   color: #7a8190;
 }
 
+/* Tooltips — consistent dark background in both themes */
+.v-tooltip > .v-overlay__content {
+  background: #212121 !important;
+  color: #ffffff !important;
+  font-size: 12px;
+}
+
 .v-theme--healthmate-dark .app-tagline {
   color: rgb(var(--v-theme-on-background));
   opacity: 0.55;

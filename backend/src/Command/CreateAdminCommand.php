@@ -69,7 +69,7 @@ final class CreateAdminCommand extends Command
         $user->setUsername($username);
         $user->setFirstName($input->getOption('first-name'));
         $user->setLastName($input->getOption('last-name'));
-        $user->setRoles(['ROLE_ADMIN']);
+        $user->addRole('ROLE_ADMIN');
         $user->setPassword($this->hasher->hashPassword($user, $password));
 
         $this->em->persist($user);

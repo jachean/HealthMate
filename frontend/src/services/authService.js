@@ -5,7 +5,9 @@ export const useAuthService = () => {
   const auth = useAuthStore()
 
   const login = async (email, password) => {
-    return await auth.login(email, password)
+    const ok = await auth.login(email, password)
+    const deactivated = !ok && auth.error?.toLowerCase().includes('deactivated')
+    return { ok, deactivated }
   }
 
   const register = async (data) => {
