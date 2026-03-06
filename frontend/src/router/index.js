@@ -61,6 +61,10 @@ const router = createRouter({
         { path: '', redirect: '/admin/doctors' },
         { path: 'doctors', name: 'admin-doctors', component: () => import('@/views/admin/AdminDoctorsView.vue') },
         { path: 'clinics', name: 'admin-clinics', component: () => import('@/views/admin/AdminClinicsView.vue') },
+        { path: 'appointments', name: 'admin-appointments', component: () => import('@/views/admin/AdminAppointmentsView.vue') },
+        { path: 'users', name: 'admin-users', component: () => import('@/views/admin/AdminUsersView.vue'), meta: { requiresAdmin: true, globalAdminOnly: true } },
+        { path: 'content', name: 'admin-content', component: () => import('@/views/admin/AdminContentView.vue') },
+        { path: 'analytics', name: 'admin-analytics', component: () => import('@/views/admin/AdminAnalyticsView.vue') },
       ],
     },
   ],
@@ -79,7 +83,11 @@ router.beforeEach(async (to) => {
 
   if (to.meta.requiresAdmin) {
     if (!auth.token) return { name: 'login', query: { redirect: to.fullPath } }
-    if (!auth.isAdmin) return { name: 'home' }
+    if (!auth.isAdmin && !auth.isClinicAdmin) return { name: 'home' }
+  }
+
+  if (to.meta.globalAdminOnly && !auth.isAdmin) {
+    return { name: 'admin-doctors' }
   }
 })
 

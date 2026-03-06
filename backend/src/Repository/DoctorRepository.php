@@ -69,13 +69,17 @@ class DoctorRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findAllPaginatedForAdmin(int $page, int $limit, ?string $search): array
+    public function findAllPaginatedForAdmin(int $page, int $limit, ?string $search, ?int $clinicId = null): array
     {
         $qb = $this->createQueryBuilder('d')
             ->leftJoin('d.clinic', 'c')
             ->leftJoin('d.specialties', 's')
             ->leftJoin('d.doctorServices', 'ds')
             ->addSelect('c', 's', 'ds');
+
+        if ($clinicId !== null) {
+            $qb->andWhere('d.clinic = :clinic')->setParameter('clinic', $clinicId);
+        }
 
         if ($search !== null && $search !== '') {
             $qb->andWhere(

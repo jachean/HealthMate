@@ -2,6 +2,9 @@ security:
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
+    role_hierarchy:
+        ROLE_ADMIN: [ROLE_CLINIC_ADMIN]
+
     providers:
         app_user_provider:
             entity:
@@ -16,6 +19,7 @@ security:
         login:
             pattern: ^/api/login
             stateless: true
+            user_checker: App\Security\UserChecker
             json_login:
                 check_path: /api/login
                 username_path: email
@@ -38,5 +42,5 @@ security:
         - { path: ^/api/clinics(/.*)?$, roles: PUBLIC_ACCESS }
         - { path: ^/api/specialties(/.*)?$, roles: PUBLIC_ACCESS }
 
-        - { path: ^/api/admin, roles: ROLE_ADMIN }
+        - { path: ^/api/admin, roles: ROLE_CLINIC_ADMIN }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

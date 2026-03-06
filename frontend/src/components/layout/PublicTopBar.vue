@@ -172,7 +172,7 @@ const { isDark, toggle: toggleTheme } = useAppTheme()
                 :to="{ name: 'me' }"
               />
               <v-list-item
-                v-if="auth.isAdmin"
+                v-if="auth.isAdmin || auth.isClinicAdmin"
                 prepend-icon="mdi-shield-crown"
                 :title="t('admin.nav.panel')"
                 :to="{ name: 'admin-doctors' }"
@@ -310,6 +310,18 @@ const { isDark, toggle: toggleTheme } = useAppTheme()
             @click="mobileDrawer = false"
           >
             {{ t('nav.myProfile') }}
+          </v-btn>
+          <v-btn
+            v-if="auth.isAdmin || auth.isClinicAdmin"
+            variant="tonal"
+            color="primary"
+            block
+            :to="{ name: 'admin-doctors' }"
+            class="mb-2"
+            prepend-icon="mdi-shield-crown"
+            @click="mobileDrawer = false"
+          >
+            {{ t('admin.nav.panel') }}
           </v-btn>
           <v-btn
             variant="text"

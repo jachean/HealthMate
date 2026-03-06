@@ -49,6 +49,64 @@ export function adminDeleteDoctorService(id) {
   return api.delete(`/api/admin/doctor-services/${id}`)
 }
 
+export function adminGetAppointments({ page = 1, limit = 20, dateFrom, dateTo, doctorId, clinicId, status, patient } = {}) {
+  return api.get('/api/admin/appointments', {
+    params: { page, limit, dateFrom, dateTo, doctorId, clinicId, status, patient },
+  }).then(r => r.data)
+}
+
+export function adminCancelAppointment(id) {
+  return api.patch(`/api/admin/appointments/${id}/cancel`)
+}
+
+export function adminCreateMedicalService(payload) {
+  return api.post('/api/admin/medical-services', payload).then(r => r.data)
+}
+
+export function adminDeleteMedicalService(id) {
+  return api.delete(`/api/admin/medical-services/${id}`)
+}
+
+export function adminGetSpecialties() {
+  return api.get('/api/admin/specialties').then(r => r.data)
+}
+
+export function adminCreateSpecialty(payload) {
+  return api.post('/api/admin/specialties', payload).then(r => r.data)
+}
+
+export function adminDeleteSpecialty(id) {
+  return api.delete(`/api/admin/specialties/${id}`)
+}
+
+export function adminRegenerateSlots() {
+  return api.post('/api/admin/tools/regenerate-slots')
+}
+
+export function adminGetAnalytics(period = 'month') {
+  return api.get('/api/admin/analytics', { params: { period } }).then(r => r.data)
+}
+
+export function adminGetUsers({ page = 1, limit = 20, search } = {}) {
+  return api.get('/api/admin/users', { params: { page, limit, search } }).then(r => r.data)
+}
+
+export function adminDeactivateUser(id) {
+  return api.patch(`/api/admin/users/${id}/deactivate`)
+}
+
+export function adminActivateUser(id) {
+  return api.patch(`/api/admin/users/${id}/activate`)
+}
+
+export function adminMakeClinicAdmin(userId, clinicId) {
+  return api.post(`/api/admin/users/${userId}/make-clinic-admin`, { clinicId })
+}
+
+export function adminRemoveClinicAdmin(userId) {
+  return api.delete(`/api/admin/users/${userId}/remove-clinic-admin`)
+}
+
 export function getSpecialties() {
   return api.get('/api/specialties').then(r => r.data)
 }

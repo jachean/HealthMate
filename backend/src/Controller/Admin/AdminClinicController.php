@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 use App\DTO\ClinicDTO;
 use App\Entity\Clinic;
+use App\Service\ClinicAdminContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,23 +14,30 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/admin/clinics')]
-#[IsGranted('ROLE_ADMIN')]
+#[IsGranted('ROLE_CLINIC_ADMIN')]
 class AdminClinicController extends AdminController
 {
     public function __construct(
         private EntityManagerInterface $em,
         private ValidatorInterface $validator,
+        private ClinicAdminContext $ctx,
     ) {
     }
 
     #[Route('', methods: ['GET'])]
     public function list(): JsonResponse
     {
+        $scopedClinic = $this->ctx->getClinic();
+        if ($scopedClinic !== null) {
+            return $this->json([$scopedClinic], Response::HTTP_OK, [], ['groups' => ['admin:clinic:list']]);
+        }
+
         $clinics = $this->em->getRepository(Clinic::class)->findBy([], ['name' => 'ASC']);
         return $this->json($clinics, Response::HTTP_OK, [], ['groups' => ['admin:clinic:list']]);
     }
 
     #[Route('', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function create(Request $request): JsonResponse
     {
         $dto = $this->buildDtoFromRequest($request);
@@ -57,6 +65,11 @@ class AdminClinicController extends AdminController
         $clinic = $this->em->getRepository(Clinic::class)->find($id);
         if (!$clinic) {
             return $this->json(['error' => 'Clinic not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $scopedClinic = $this->ctx->getClinic();
+        if ($scopedClinic !== null && $clinic->getId() !== $scopedClinic->getId()) {
+            return $this->json(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
         $dto = $this->buildDtoFromRequest($request);

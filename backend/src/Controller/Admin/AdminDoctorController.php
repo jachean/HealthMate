@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\DTO\DoctorDTO;
 use App\Entity\Doctor;
 use App\Repository\DoctorRepository;
+use App\Service\ClinicAdminContext;
 use App\Service\TimeSlotGenerator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,7 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/admin/doctors')]
-#[IsGranted('ROLE_ADMIN')]
+#[IsGranted('ROLE_CLINIC_ADMIN')]
 class AdminDoctorController extends AdminController
 {
     public function __construct(
@@ -23,6 +24,7 @@ class AdminDoctorController extends AdminController
         private EntityManagerInterface $em,
         private ValidatorInterface $validator,
         private TimeSlotGenerator $timeSlotGenerator,
+        private ClinicAdminContext $ctx,
     ) {
     }
 
@@ -33,7 +35,12 @@ class AdminDoctorController extends AdminController
         $limit = max(1, min(100, (int) $request->query->get('limit', '20')));
         $search = $request->query->get('search') ?: null;
 
-        $result = $this->doctorRepository->findAllPaginatedForAdmin($page, $limit, $search);
+        $result = $this->doctorRepository->findAllPaginatedForAdmin(
+            $page,
+            $limit,
+            $search,
+            $this->ctx->getClinic()?->getId()
+        );
 
         return $this->json([
             'data' => $result['data'],
@@ -47,6 +54,12 @@ class AdminDoctorController extends AdminController
     public function create(Request $request): JsonResponse
     {
         $dto = $this->buildDtoFromRequest($request);
+
+        // For clinic admins, override the clinic with their own
+        $scopedClinic = $this->ctx->getClinic();
+        if ($scopedClinic !== null) {
+            $dto->clinicId = $scopedClinic->getId();
+        }
 
         $errors = $this->validator->validate($dto);
         if (count($errors) > 0) {
@@ -90,7 +103,18 @@ class AdminDoctorController extends AdminController
             return $this->json(['error' => 'Doctor not found'], Response::HTTP_NOT_FOUND);
         }
 
+        // Clinic admins can only edit doctors in their own clinic
+        $scopedClinic = $this->ctx->getClinic();
+        if ($scopedClinic !== null && $doctor->getClinic()->getId() !== $scopedClinic->getId()) {
+            return $this->json(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
         $dto = $this->buildDtoFromRequest($request);
+
+        // Clinic admins cannot move the doctor to another clinic
+        if ($scopedClinic !== null) {
+            $dto->clinicId = $scopedClinic->getId();
+        }
 
         $errors = $this->validator->validate($dto);
         if (count($errors) > 0) {

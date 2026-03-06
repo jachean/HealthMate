@@ -3,7 +3,7 @@ nelmio_cors:
         allow_origin: ['http://localhost:5173']
         allow_credentials: true
         allow_headers: ['Content-Type', 'Authorization']
-        allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+        allow_methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
         expose_headers: ['Link']
         max_age: 3600
 
@@ -12,5 +12,5 @@ nelmio_cors:
             allow_origin: ['http://localhost:5173']
             allow_credentials: true
             allow_headers: ['Content-Type', 'Authorization']
-            allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+            allow_methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
             max_age: 3600

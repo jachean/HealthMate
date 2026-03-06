@@ -1,15 +1,27 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppTheme } from '@/composables/useAppTheme'
+import { useAuthStore } from '@/stores/auth'
 
 const { t, locale } = useI18n()
 const { isDark, toggle: toggleTheme } = useAppTheme()
+const auth = useAuthStore()
 
-const navItems = [
-  { title: () => t('admin.nav.doctors'), icon: 'mdi-doctor', to: { name: 'admin-doctors' } },
-  { title: () => t('admin.nav.clinics'), icon: 'mdi-hospital-building', to: { name: 'admin-clinics' } },
+const allNavItems = [
+  { title: () => t('admin.nav.doctors'), icon: 'mdi-doctor', to: { name: 'admin-doctors' }, clinicAdminVisible: true },
+  { title: () => t('admin.nav.clinics'), icon: 'mdi-hospital-building', to: { name: 'admin-clinics' }, clinicAdminVisible: true },
+  { title: () => t('admin.nav.appointments'), icon: 'mdi-calendar-clock', to: { name: 'admin-appointments' }, clinicAdminVisible: true },
+  { title: () => t('admin.nav.users'), icon: 'mdi-account-group', to: { name: 'admin-users' }, clinicAdminVisible: false },
+  { title: () => t('admin.nav.content'), icon: 'mdi-database-edit', to: { name: 'admin-content' }, clinicAdminVisible: true },
+  { title: () => t('admin.nav.analytics'), icon: 'mdi-chart-bar', to: { name: 'admin-analytics' }, clinicAdminVisible: true },
 ]
+
+const navItems = computed(() =>
+  auth.isClinicAdmin
+    ? allNavItems.filter(item => item.clinicAdminVisible)
+    : allNavItems
+)
 
 const localeMenuOpen = ref(false)
 

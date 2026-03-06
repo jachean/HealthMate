@@ -25,7 +25,20 @@
       "Bash(composer phpcs:*)",
       "Bash(php -r:*)",
       "Bash(vendor/bin/phpcbf:*)",
-      "Bash(composer phpunit:*)"
+      "Bash(composer phpunit:*)",
+      "Bash(php -l:*)",
+      "Bash(node --input-type=module:*)",
+      "Bash(netstat:*)",
+      "Bash(cmd.exe /c \"netstat -ano | findstr :8000\")",
+      "Bash(taskkill:*)",
+      "Bash(cmd.exe /c \"taskkill /F /IM php-cgi.exe\")",
+      "Bash(cmd.exe /c \"taskkill /F /IM php-cgi.exe && echo killed\")",
+      "Bash(/c/Users/Mihai/PhpstormProjects/HealthMate/backend/src/Entity/UserRole.php:*)",
+      "Bash(/c/Users/Mihai/PhpstormProjects/HealthMate/backend/src/Entity/User.php:*)",
+      "Bash(git stash:*)",
+      "Bash(python3:*)",
+      "Bash(git checkout:*)",
+      "Bash(vendor/bin/phpcs:*)"
     ]
   }
 }

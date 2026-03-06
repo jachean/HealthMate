@@ -7,10 +7,15 @@ export const useAuthStore = defineStore('auth', {
     user: null,
     loading: false,
     error: null,
+    clinicAdminClinicId: null,
   }),
 
   getters: {
     isAdmin: (state) => state.user?.roles?.includes('ROLE_ADMIN') ?? false,
+    isClinicAdmin: (state) =>
+      (state.user?.roles?.includes('ROLE_CLINIC_ADMIN') ?? false) &&
+      !(state.user?.roles?.includes('ROLE_ADMIN') ?? false),
+    clinicAdminClinicId: (state) => state.clinicAdminClinicId,
   },
 
   actions: {
@@ -30,7 +35,7 @@ export const useAuthStore = defineStore('auth', {
         return true
       } catch (e) {
         console.error('Login error:', e.response?.status, e.response?.data)
-        this.error = 'Invalid credentials'
+        this.error = e.response?.data?.message || 'Invalid credentials'
         this.token = null
         localStorage.removeItem('hm_token')
         return false
@@ -44,6 +49,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         const { data } = await api.get('/api/me')
         this.user = data
+        this.clinicAdminClinicId = data.clinicAdminClinicId ?? null
       } catch {
         this.logout()
       }
@@ -52,6 +58,7 @@ export const useAuthStore = defineStore('auth', {
     logout() {
       this.token = null
       this.user = null
+      this.clinicAdminClinicId = null
       localStorage.removeItem('hm_token')
     },
   },
