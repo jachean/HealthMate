@@ -253,9 +253,7 @@ class AdminAnalyticsController extends AdminController
     {
         $conn = $this->em->getConnection();
 
-        $clinicJoin  = $clinic !== null
-            ? 'INNER JOIN time_slot ts ON a.time_slot_id = ts.id INNER JOIN doctor d ON ts.doctor_id = d.id'
-            : 'INNER JOIN time_slot ts ON a.time_slot_id = ts.id INNER JOIN doctor d ON ts.doctor_id = d.id';
+        $clinicJoin  = 'INNER JOIN time_slot ts ON a.time_slot_id = ts.id INNER JOIN doctor d ON ts.doctor_id = d.id';
         $clinicWhere = $clinic !== null ? 'AND d.clinic_id = :clinicId' : '';
 
         // Total revenue
