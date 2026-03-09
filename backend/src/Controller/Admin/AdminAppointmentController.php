@@ -2,13 +2,19 @@
 
 namespace App\Controller\Admin;
 
+use App\Email\AppointmentConfirmationEmail;
 use App\Entity\Appointment;
 use App\Repository\AppointmentRepository;
+use App\Repository\DoctorServiceRepository;
+use App\Repository\TimeSlotRepository;
+use App\Repository\UserRepository;
 use App\Service\ClinicAdminContext;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -20,6 +26,11 @@ class AdminAppointmentController extends AdminController
         private AppointmentRepository $appointmentRepository,
         private EntityManagerInterface $em,
         private ClinicAdminContext $ctx,
+        private UserRepository $userRepository,
+        private TimeSlotRepository $timeSlotRepository,
+        private DoctorServiceRepository $doctorServiceRepository,
+        private MailerInterface $mailer,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -52,6 +63,92 @@ class AdminAppointmentController extends AdminController
             'page'  => $page,
             'limit' => $limit,
         ]);
+    }
+
+    #[Route('/{id}', methods: ['GET'])]
+    public function detail(int $id): Response
+    {
+        $appointment = $this->appointmentRepository->find($id);
+        if (!$appointment) {
+            return $this->json(['error' => 'Appointment not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $scopedClinic = $this->ctx->getClinic();
+        if ($scopedClinic !== null) {
+            $appointmentClinicId = $appointment->getTimeSlot()->getDoctor()->getClinic()->getId();
+            if ($appointmentClinicId !== $scopedClinic->getId()) {
+                return $this->json(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
+            }
+        }
+
+        return $this->json($this->toAdminArray($appointment));
+    }
+
+    #[Route('', methods: ['POST'])]
+    public function create(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true) ?? [];
+
+        $userId          = isset($data['userId']) ? (int) $data['userId'] : null;
+        $timeSlotId      = isset($data['timeSlotId']) ? (int) $data['timeSlotId'] : null;
+        $doctorServiceId = isset($data['doctorServiceId']) ? (int) $data['doctorServiceId'] : null;
+
+        if (!$userId || !$timeSlotId || !$doctorServiceId) {
+            return $this->json(
+                ['error' => 'userId, timeSlotId and doctorServiceId are required'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        $user = $this->userRepository->find($userId);
+        if (!$user) {
+            return $this->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $timeSlot = $this->timeSlotRepository->find($timeSlotId);
+        if (!$timeSlot || $timeSlot->getStartAt() <= new \DateTimeImmutable()) {
+            return $this->json(['error' => 'TIME_SLOT_NOT_AVAILABLE'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($timeSlot->isBooked()) {
+            return $this->json(['error' => 'TIME_SLOT_ALREADY_BOOKED'], Response::HTTP_CONFLICT);
+        }
+
+        $doctorService = $this->doctorServiceRepository->find($doctorServiceId);
+        if (!$doctorService) {
+            return $this->json(['error' => 'Doctor service not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Clinic admin scoping
+        $scopedClinic = $this->ctx->getClinic();
+        if ($scopedClinic !== null) {
+            if ($timeSlot->getDoctor()->getClinic()->getId() !== $scopedClinic->getId()) {
+                return $this->json(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
+            }
+        }
+
+        $appointment = new Appointment();
+        $appointment->setUser($user);
+        $appointment->setTimeSlot($timeSlot);
+        $appointment->setDoctorService($doctorService);
+
+        $timeSlot->setIsBooked(true);
+
+        $this->em->persist($appointment);
+        $this->em->flush();
+
+        try {
+            $confirmationEmail = AppointmentConfirmationEmail::create(
+                $appointment,
+                $_ENV['MAILER_FROM_EMAIL'] ?? 'noreply@healthmate.ro',
+                $_ENV['MAILER_FROM_NAME'] ?? 'HealthMate'
+            );
+            $this->mailer->send($confirmationEmail);
+        } catch (\Throwable $e) {
+            $this->logger->error('Admin appointment confirmation email failed: ' . $e->getMessage());
+        }
+
+        return $this->json($this->toAdminArray($appointment), Response::HTTP_CREATED);
     }
 
     #[Route('/{id}/cancel', methods: ['PATCH'])]
@@ -106,9 +203,15 @@ class AdminAppointmentController extends AdminController
                 'email' => $user->getEmail(),
             ],
             'service'   => [
-                'name'  => $doctorService->getMedicalService()->getName(),
-                'price' => $doctorService->getPrice(),
+                'name'     => $doctorService->getMedicalService()->getName(),
+                'price'    => $doctorService->getPrice(),
+                'duration' => $doctorService->getDurationMinutes(),
             ],
+            'review'    => $appointment->getReview() !== null ? [
+                'id'      => $appointment->getReview()->getId(),
+                'rating'  => $appointment->getReview()->getRating(),
+                'comment' => $appointment->getReview()->getComment(),
+            ] : null,
         ];
     }
 }

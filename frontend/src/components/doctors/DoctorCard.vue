@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { uploadUrl } from '@/utils/url'
 
 const props = defineProps({
   doctor: { type: Object, required: true },
@@ -54,11 +55,12 @@ function onSelect() {
   >
     <div class="card-content">
       <v-avatar
-        color="primary"
+        :color="doctor.avatarPath ? undefined : 'primary'"
         size="56"
         class="doctor-avatar"
       >
-        <span class="text-h6 font-weight-medium">{{ initials }}</span>
+        <v-img v-if="doctor.avatarPath" :src="uploadUrl(doctor.avatarPath)" cover />
+        <span v-else class="text-h6 font-weight-medium">{{ initials }}</span>
       </v-avatar>
 
       <div class="doctor-info">

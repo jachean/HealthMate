@@ -30,7 +30,6 @@ const { t } = useI18n()
         hide-details
         density="comfortable"
         class="search-input flex-grow-1"
-        bg-color="grey-lighten-4"
       />
 
       <v-btn

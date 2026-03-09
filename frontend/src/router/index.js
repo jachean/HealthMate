@@ -27,6 +27,21 @@ const router = createRouter({
           component: DoctorsView,
         },
         {
+          path: 'doctors/:id',
+          name: 'doctor-profile',
+          component: () => import('@/views/DoctorProfileView.vue'),
+        },
+        {
+          path: 'clinics',
+          name: 'clinics',
+          component: () => import('@/views/ClinicsView.vue'),
+        },
+        {
+          path: 'clinics/:id',
+          name: 'clinic-profile',
+          component: () => import('@/views/ClinicProfileView.vue'),
+        },
+        {
           path: 'terms',
           name: 'terms',
           component: TermsView,

@@ -52,6 +52,7 @@ class AdminClinicController extends AdminController
         $clinic->setDescription($dto->description);
         $clinic->setAddress($dto->address);
         $clinic->setCity($dto->city);
+        $clinic->setLogoPath($dto->logo);
 
         $this->em->persist($clinic);
         $this->em->flush();
@@ -83,6 +84,7 @@ class AdminClinicController extends AdminController
         $clinic->setDescription($dto->description);
         $clinic->setAddress($dto->address);
         $clinic->setCity($dto->city);
+        $clinic->setLogoPath($dto->logo ?? $clinic->getLogoPath());
 
         $this->em->flush();
 
@@ -98,6 +100,7 @@ class AdminClinicController extends AdminController
         $dto->description = $body['description'] ?? null;
         $dto->address = $body['address'] ?? '';
         $dto->city = $body['city'] ?? '';
+        $dto->logo = $body['logo'] ?? null;
 
         return $dto;
     }

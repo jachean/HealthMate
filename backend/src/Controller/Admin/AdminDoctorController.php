@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\DTO\DoctorDTO;
 use App\Entity\Doctor;
 use App\Repository\DoctorRepository;
+use App\Repository\TimeSlotRepository;
 use App\Service\ClinicAdminContext;
 use App\Service\TimeSlotGenerator;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,6 +22,7 @@ class AdminDoctorController extends AdminController
 {
     public function __construct(
         private DoctorRepository $doctorRepository,
+        private TimeSlotRepository $timeSlotRepository,
         private EntityManagerInterface $em,
         private ValidatorInterface $validator,
         private TimeSlotGenerator $timeSlotGenerator,
@@ -83,6 +85,10 @@ class AdminDoctorController extends AdminController
         $doctor->setAcceptsInsurance($dto->acceptsInsurance);
         $doctor->setIsActive($dto->isActive);
         $doctor->setClinic($clinic);
+        $doctor->setWorkDays($dto->workDays);
+        $doctor->setStartHour($dto->startHour);
+        $doctor->setEndHour($dto->endHour);
+        $doctor->setAvatarPath($dto->avatar);
         foreach ($specialties as $specialty) {
             $doctor->addSpecialty($specialty);
         }
@@ -137,6 +143,10 @@ class AdminDoctorController extends AdminController
         $doctor->setAcceptsInsurance($dto->acceptsInsurance);
         $doctor->setIsActive($dto->isActive);
         $doctor->setClinic($clinic);
+        $doctor->setWorkDays($dto->workDays);
+        $doctor->setStartHour($dto->startHour);
+        $doctor->setEndHour($dto->endHour);
+        $doctor->setAvatarPath($dto->avatar ?? $doctor->getAvatarPath());
 
         foreach ($doctor->getSpecialties()->toArray() as $existing) {
             $doctor->removeSpecialty($existing);
@@ -147,7 +157,49 @@ class AdminDoctorController extends AdminController
 
         $this->em->flush();
 
+        // Remove future unbooked slots that no longer fit the updated schedule,
+        // then regenerate so only valid slots remain.
+        $this->timeSlotRepository->deleteAllFutureUnbookedForDoctor($doctor->getId());
+        $this->timeSlotGenerator->generateForDoctor($doctor);
+
         return $this->json($doctor, Response::HTTP_OK, [], ['groups' => ['doctor:list']]);
+    }
+
+    #[Route('/{id}/availability', methods: ['GET'])]
+    public function availability(int $id): JsonResponse
+    {
+        $doctor = $this->doctorRepository->find($id);
+        if (!$doctor) {
+            return $this->json(['error' => 'Doctor not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $scopedClinic = $this->ctx->getClinic();
+        if ($scopedClinic !== null && $doctor->getClinic()->getId() !== $scopedClinic->getId()) {
+            return $this->json(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $slots     = $this->timeSlotRepository->findAvailableSlotsForDoctor($doctor->getId());
+        $workDays  = $doctor->getWorkDays();
+        $startHour = $doctor->getStartHour();
+        $endHour   = $doctor->getEndHour();
+
+        $slots = array_values(array_filter($slots, static function ($slot) use ($workDays, $startHour, $endHour): bool {
+            $start = $slot->getStartAt();
+            if (!in_array((int) $start->format('N'), $workDays, true)) {
+                return false;
+            }
+            $hour = (int) $start->format('G');
+            return $hour >= $startHour && $hour < $endHour;
+        }));
+
+        return $this->json(array_map(
+            static fn ($slot) => [
+                'id'      => $slot->getId(),
+                'startAt' => $slot->getStartAt()->format(\DateTimeInterface::ATOM),
+                'endAt'   => $slot->getEndAt()->format(\DateTimeInterface::ATOM),
+            ],
+            $slots
+        ));
     }
 
     private function buildDtoFromRequest(Request $request): DoctorDTO
@@ -162,6 +214,10 @@ class AdminDoctorController extends AdminController
         $dto->isActive = $body['isActive'] ?? true;
         $dto->clinicId = $body['clinicId'] ?? 0;
         $dto->specialtyIds = $body['specialtyIds'] ?? [];
+        $dto->workDays = $body['workDays'] ?? [1, 2, 3, 4, 5];
+        $dto->startHour = (int) ($body['startHour'] ?? 9);
+        $dto->endHour = (int) ($body['endHour'] ?? 17);
+        $dto->avatar = $body['avatar'] ?? null;
 
         return $dto;
     }

@@ -35,6 +35,7 @@ class AdminAnalyticsController extends AdminController
             'topSpecialties'       => $this->getTopSpecialties($clinic),
             'clinicOccupancy'      => $this->getClinicOccupancy($clinic),
             'reviewScores'         => $this->getReviewScores($clinic),
+            'revenue'              => $this->getRevenueSummary($period, $clinic),
         ]);
     }
 
@@ -246,6 +247,117 @@ class AdminAnalyticsController extends AdminController
                 ? round((int) $r['booked_slots'] / (int) $r['total_slots'] * 100, 1)
                 : 0,
         ], $rows);
+    }
+
+    private function getRevenueSummary(string $period, ?Clinic $clinic): array
+    {
+        $conn = $this->em->getConnection();
+
+        $clinicJoin  = $clinic !== null
+            ? 'INNER JOIN time_slot ts ON a.time_slot_id = ts.id INNER JOIN doctor d ON ts.doctor_id = d.id'
+            : 'INNER JOIN time_slot ts ON a.time_slot_id = ts.id INNER JOIN doctor d ON ts.doctor_id = d.id';
+        $clinicWhere = $clinic !== null ? 'AND d.clinic_id = :clinicId' : '';
+
+        // Total revenue
+        $params = ['status' => Appointment::STATUS_BOOKED];
+        if ($clinic !== null) {
+            $params['clinicId'] = $clinic->getId();
+        }
+
+        $totals = $conn->fetchAssociative("
+            SELECT COALESCE(SUM(ds.price), 0) AS total, COUNT(a.id) AS count
+            FROM appointment a
+            $clinicJoin
+            INNER JOIN doctor_service ds ON a.doctor_service_id = ds.id
+            WHERE a.status = :status $clinicWhere
+        ", $params);
+
+        $totalRevenue = (float) $totals['total'];
+        $count        = (int) $totals['count'];
+
+        // Revenue by period
+        switch ($period) {
+            case 'day':
+                $from = (new \DateTime())->modify('-30 days')->format('Y-m-d');
+                $groupSql = "DATE(a.created_at)";
+                $labelSql = "DATE(a.created_at) AS label";
+                $orderSql = "label ASC";
+                break;
+            case 'week':
+                $from = (new \DateTime())->modify('-84 days')->format('Y-m-d');
+                $groupSql = "YEAR(a.created_at), WEEK(a.created_at, 1)";
+                $labelSql = "CONCAT(YEAR(a.created_at), '-W', LPAD(WEEK(a.created_at, 1), 2, '0')) AS label";
+                $orderSql = "YEAR(a.created_at) ASC, WEEK(a.created_at, 1) ASC";
+                break;
+            default:
+                $from = (new \DateTime())->modify('-365 days')->format('Y-m-d');
+                $groupSql = "DATE_FORMAT(a.created_at, '%Y-%m')";
+                $labelSql = "DATE_FORMAT(a.created_at, '%Y-%m') AS label";
+                $orderSql = "label ASC";
+        }
+
+        $periodParams = array_merge($params, ['from' => $from]);
+        $revenueByPeriodRows = $conn->fetchAllAssociative("
+            SELECT $labelSql, COALESCE(SUM(ds.price), 0) AS revenue
+            FROM appointment a
+            $clinicJoin
+            INNER JOIN doctor_service ds ON a.doctor_service_id = ds.id
+            WHERE a.status = :status AND a.created_at >= :from $clinicWhere
+            GROUP BY $groupSql
+            ORDER BY $orderSql
+        ", $periodParams);
+
+        $revenueByPeriod = array_map(fn ($r) => [
+            'label'   => $r['label'],
+            'revenue' => round((float) $r['revenue'], 2),
+        ], $revenueByPeriodRows);
+
+        // Top doctors by revenue
+        $topDoctorRows = $conn->fetchAllAssociative("
+            SELECT d.id, CONCAT('Dr. ', d.first_name, ' ', d.last_name) AS name,
+                   COALESCE(SUM(ds.price), 0) AS revenue, COUNT(a.id) AS appointment_count
+            FROM appointment a
+            $clinicJoin
+            INNER JOIN doctor_service ds ON a.doctor_service_id = ds.id
+            WHERE a.status = :status $clinicWhere
+            GROUP BY d.id, d.first_name, d.last_name
+            ORDER BY revenue DESC
+            LIMIT 10
+        ", $params);
+
+        $topDoctors = array_map(fn ($r) => [
+            'id'               => (int) $r['id'],
+            'name'             => $r['name'],
+            'revenue'          => round((float) $r['revenue'], 2),
+            'appointmentCount' => (int) $r['appointment_count'],
+        ], $topDoctorRows);
+
+        // Top services by revenue
+        $topServiceRows = $conn->fetchAllAssociative("
+            SELECT ms.name, COALESCE(SUM(ds.price), 0) AS revenue, COUNT(a.id) AS appointment_count
+            FROM appointment a
+            $clinicJoin
+            INNER JOIN doctor_service ds ON a.doctor_service_id = ds.id
+            INNER JOIN medical_service ms ON ds.medical_service_id = ms.id
+            WHERE a.status = :status $clinicWhere
+            GROUP BY ms.id, ms.name
+            ORDER BY revenue DESC
+            LIMIT 10
+        ", $params);
+
+        $topServices = array_map(fn ($r) => [
+            'name'             => $r['name'],
+            'revenue'          => round((float) $r['revenue'], 2),
+            'appointmentCount' => (int) $r['appointment_count'],
+        ], $topServiceRows);
+
+        return [
+            'totalRevenue'     => $totalRevenue,
+            'avgRevenue'       => $count > 0 ? round($totalRevenue / $count, 2) : 0,
+            'revenueByPeriod'  => $revenueByPeriod,
+            'topDoctors'       => $topDoctors,
+            'topServices'      => $topServices,
+        ];
     }
 
     private function getReviewScores(?Clinic $clinic): array

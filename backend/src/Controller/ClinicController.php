@@ -21,4 +21,28 @@ final class ClinicController extends AbstractController
 
         return $this->json($clinics, context: ['groups' => ['clinic:list']]);
     }
+
+    #[Route('/{id}', methods: ['GET'])]
+    public function show(int $id, ClinicRepository $clinicRepository): JsonResponse
+    {
+        $clinic = $clinicRepository->find($id);
+
+        if (!$clinic) {
+            return $this->json(['error' => ['code' => 'NOT_FOUND', 'message' => 'Clinic not found.']], 404);
+        }
+
+        return $this->json($clinic, context: ['groups' => ['clinic:detail']]);
+    }
+
+    #[Route('/{id}/doctors', methods: ['GET'])]
+    public function doctors(int $id, ClinicRepository $clinicRepository): JsonResponse
+    {
+        $clinic = $clinicRepository->find($id);
+
+        if (!$clinic) {
+            return $this->json(['error' => ['code' => 'NOT_FOUND', 'message' => 'Clinic not found.']], 404);
+        }
+
+        return $this->json($clinic->getDoctors()->toArray(), context: ['groups' => ['doctor:list']]);
+    }
 }

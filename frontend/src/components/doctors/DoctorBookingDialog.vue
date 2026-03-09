@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
 import api from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
+import { uploadUrl } from '@/utils/url'
 import TimeSlotButton from '@/components/doctors/TimeSlotButton.vue'
 import ClinicMap from '@/components/ui/ClinicMap.vue'
 import { isoToDateKey, dateKeyToLabel } from '@/utils/date'
@@ -12,6 +13,7 @@ import { isoToDateKey, dateKeyToLabel } from '@/utils/date'
 const props = defineProps({
   modelValue: Boolean,
   doctor: { type: Object, required: true },
+  preSelectedServiceId: { type: Number, default: null },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -151,7 +153,17 @@ async function loadServices() {
   try {
     const { data } = await api.get(`/api/doctors/${props.doctor.id}/services`)
     services.value = Array.isArray(data) ? data : []
-    if (availableSpecialties.value.length === 1) {
+    if (props.preSelectedServiceId) {
+      const match = services.value.find(s => s.id === props.preSelectedServiceId)
+      if (match) {
+        const sp = availableSpecialties.value.find(
+          s => s.slug === match.medicalService?.specialty?.slug
+        ) ?? null
+        selectedSpecialty.value = sp
+        await nextTick()
+        selectedService.value = match
+      }
+    } else if (availableSpecialties.value.length === 1) {
       selectedSpecialty.value = availableSpecialties.value[0]
     }
   } catch {
@@ -286,11 +298,25 @@ function formatPrice(price) {
         <div class="booking-column">
           <!-- Doctor Info -->
           <div class="doctor-card">
-            <v-avatar color="primary" size="56" class="doctor-avatar">
-              <span class="text-h6">{{ doctorInitials }}</span>
+            <v-avatar :color="doctor.avatarPath ? undefined : 'primary'" size="56" class="doctor-avatar">
+              <v-img v-if="doctor.avatarPath" :src="uploadUrl(doctor.avatarPath)" cover />
+              <span v-else class="text-h6">{{ doctorInitials }}</span>
             </v-avatar>
             <div class="doctor-details">
-              <h3 class="text-subtitle-1 font-weight-bold">Dr. {{ doctorName }}</h3>
+              <div class="d-flex align-center ga-2 flex-wrap">
+                <h3 class="text-subtitle-1 font-weight-bold">Dr. {{ doctorName }}</h3>
+                <v-btn
+                  :to="{ name: 'doctor-profile', params: { id: doctor.id } }"
+                  variant="text"
+                  size="x-small"
+                  color="primary"
+                  density="compact"
+                  append-icon="mdi-open-in-new"
+                  @click="isOpen = false"
+                >
+                  {{ t('doctorProfile.viewProfile') }}
+                </v-btn>
+              </div>
               <p v-if="doctor.clinic?.name" class="text-body-2 text-medium-emphasis">
                 {{ doctor.clinic.name }}
               </p>
@@ -387,18 +413,18 @@ function formatPrice(price) {
                     <span class="step-title">{{ t('booking.step2') }}</span>
                   </div>
 
-                  <div class="day-chips">
-                    <v-chip
-                      v-for="day in dayOptions"
-                      :key="day"
-                      :color="selectedDay === day ? 'primary' : undefined"
-                      :variant="selectedDay === day ? 'flat' : 'outlined'"
-                      @click="selectedDay = day"
-                      class="day-chip"
-                    >
-                      {{ dateKeyToLabel(day) }}
-                    </v-chip>
-                  </div>
+                  <v-slide-group show-arrows="always" class="day-slide-group">
+                    <v-slide-group-item v-for="day in dayOptions" :key="day">
+                      <v-chip
+                        :color="selectedDay === day ? 'primary' : undefined"
+                        :variant="selectedDay === day ? 'flat' : 'outlined'"
+                        @click="selectedDay = day"
+                        class="day-chip ma-1"
+                      >
+                        {{ dateKeyToLabel(day) }}
+                      </v-chip>
+                    </v-slide-group-item>
+                  </v-slide-group>
                 </div>
 
                 <!-- Step 4/3: Select Time -->
@@ -739,6 +765,16 @@ function formatPrice(price) {
 
 .day-chip {
   font-weight: 500;
+}
+
+.day-slide-group {
+  margin: 0 -4px;
+}
+
+.day-slide-group :deep(.v-slide-group__prev),
+.day-slide-group :deep(.v-slide-group__next) {
+  min-width: 28px;
+  flex: 0 0 28px;
 }
 
 .time-slots-grid {

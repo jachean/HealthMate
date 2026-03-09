@@ -49,6 +49,14 @@ export function adminDeleteDoctorService(id) {
   return api.delete(`/api/admin/doctor-services/${id}`)
 }
 
+export function adminGetAppointment(id) {
+  return api.get(`/api/admin/appointments/${id}`).then(r => r.data)
+}
+
+export function adminCreateAppointment(payload) {
+  return api.post('/api/admin/appointments', payload).then(r => r.data)
+}
+
 export function adminGetAppointments({ page = 1, limit = 20, dateFrom, dateTo, doctorId, clinicId, status, patient } = {}) {
   return api.get('/api/admin/appointments', {
     params: { page, limit, dateFrom, dateTo, doctorId, clinicId, status, patient },
@@ -107,10 +115,28 @@ export function adminRemoveClinicAdmin(userId) {
   return api.delete(`/api/admin/users/${userId}/remove-clinic-admin`)
 }
 
+export function adminGetDoctorUnavailability(doctorId) {
+  return api.get(`/api/admin/doctors/${doctorId}/unavailability`).then(r => r.data)
+}
+
+export function adminAddDoctorUnavailability(doctorId, payload) {
+  return api.post(`/api/admin/doctors/${doctorId}/unavailability`, payload).then(r => r.data)
+}
+
+export function adminDeleteDoctorUnavailability(doctorId, unavailId) {
+  return api.delete(`/api/admin/doctors/${doctorId}/unavailability/${unavailId}`)
+}
+
 export function getSpecialties() {
   return api.get('/api/specialties').then(r => r.data)
 }
 
 export function getClinics() {
   return api.get('/api/clinics').then(r => r.data)
+}
+
+export function adminUploadFile(file, type) {
+  const form = new FormData()
+  form.append('file', file)
+  return api.post(`/api/admin/upload?type=${type}`, form).then(r => r.data.path)
 }

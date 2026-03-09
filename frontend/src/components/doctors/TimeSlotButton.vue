@@ -50,6 +50,10 @@ const timeLabel = computed(() => formatSlotRange(props.slot.startAt, props.slot.
   color: rgb(var(--v-theme-primary));
 }
 
+.slot-time {
+  white-space: nowrap;
+}
+
 .slot-icon {
   opacity: 0.5;
 }

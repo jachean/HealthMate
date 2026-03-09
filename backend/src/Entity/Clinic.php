@@ -11,25 +11,29 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: ClinicRepository::class)]
 class Clinic
 {
-    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail', 'admin:clinic:list'])]
+    #[Groups(['clinic:list', 'clinic:detail', 'doctor:list', 'doctor:detail', 'admin:clinic:list'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail', 'admin:clinic:list'])]
+    #[Groups(['clinic:list', 'clinic:detail', 'doctor:list', 'doctor:detail', 'admin:clinic:list'])]
     #[ORM\Column(length: 255)]
     private string $name;
 
-    #[Groups(['admin:clinic:list'])]
+    #[Groups(['clinic:detail', 'admin:clinic:list'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
 
-    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail', 'admin:clinic:list'])]
+    #[Groups(['clinic:list', 'clinic:detail', 'admin:clinic:list', 'doctor:list', 'doctor:detail'])]
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $logoPath = null;
+
+    #[Groups(['clinic:list', 'clinic:detail', 'doctor:list', 'doctor:detail', 'admin:clinic:list'])]
     #[ORM\Column(length: 255)]
     private string $address;
 
-    #[Groups(['clinic:list', 'doctor:list', 'doctor:detail', 'admin:clinic:list'])]
+    #[Groups(['clinic:list', 'clinic:detail', 'doctor:list', 'doctor:detail', 'admin:clinic:list'])]
     #[ORM\Column(length: 100)]
     private string $city;
 
@@ -107,6 +111,18 @@ class Clinic
     public function setCity(string $city): static
     {
         $this->city = $city;
+
+        return $this;
+    }
+
+    public function getLogoPath(): ?string
+    {
+        return $this->logoPath;
+    }
+
+    public function setLogoPath(?string $logoPath): static
+    {
+        $this->logoPath = $logoPath;
 
         return $this;
     }

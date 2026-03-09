@@ -2,6 +2,8 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { adminGetAppointments, adminCancelAppointment, adminGetDoctors, getClinics } from '@/services/adminService'
+import AppointmentDetailDialog from '@/components/admin/AppointmentDetailDialog.vue'
+import ManualAppointmentDialog from '@/components/admin/ManualAppointmentDialog.vue'
 
 const { t } = useI18n()
 
@@ -61,6 +63,20 @@ const cancelDialog = ref(false)
 const appointmentToCancel = ref(null)
 const cancelling = ref(false)
 const cancelError = ref('')
+
+const detailDialog = ref(false)
+const selectedAppointmentId = ref(null)
+
+const manualDialog = ref(false)
+
+function openDetail(appointment) {
+  selectedAppointmentId.value = appointment.id
+  detailDialog.value = true
+}
+
+function openManualCreate() {
+  manualDialog.value = true
+}
 
 const headers = [
   { title: t('admin.appointments.dateTime'), key: 'startAt', sortable: false },
@@ -150,6 +166,18 @@ onMounted(async () => {
 </script>
 
 <template>
+  <!-- Appointment detail dialog -->
+  <AppointmentDetailDialog
+    v-model="detailDialog"
+    :appointment-id="selectedAppointmentId"
+  />
+
+  <!-- Manual appointment creation dialog -->
+  <ManualAppointmentDialog
+    v-model="manualDialog"
+    @saved="fetchAppointments"
+  />
+
   <!-- Cancel confirmation dialog -->
   <v-dialog v-model="cancelDialog" max-width="420">
     <v-card>
@@ -187,6 +215,9 @@ onMounted(async () => {
           <div class="text-body-2 text-medium-emphasis">{{ total }} {{ t('admin.appointments.total') }}</div>
         </div>
       </div>
+      <v-btn color="primary" prepend-icon="mdi-plus" @click="openManualCreate">
+        {{ t('admin.appointments.create.title') }}
+      </v-btn>
     </div>
 
     <!-- Filters -->
@@ -252,7 +283,7 @@ onMounted(async () => {
           </v-menu>
         </v-col>
         <v-col cols="12" sm="2">
-          <v-select
+          <v-autocomplete
             v-model="filters.doctorId"
             :items="doctors"
             item-value="id"
@@ -262,7 +293,29 @@ onMounted(async () => {
             density="compact"
             hide-details
             clearable
-          />
+            :custom-filter="(_, query, item) => {
+              const d = item.raw
+              const name = `${d.firstName} ${d.lastName}`.toLowerCase()
+              const clinic = (d.clinic?.name ?? '').toLowerCase()
+              const q = query.toLowerCase()
+              return name.includes(q) || clinic.includes(q)
+            }"
+          >
+            <template #item="{ item, props: itemProps }">
+              <v-list-item v-bind="itemProps" :subtitle="item.raw.clinic?.name">
+                <template #title>
+                  <span>Dr. {{ item.raw.firstName }} {{ item.raw.lastName }}</span>
+                  <v-chip
+                    v-if="!item.raw.isActive"
+                    size="x-small"
+                    color="warning"
+                    variant="tonal"
+                    class="ml-2"
+                  >{{ t('admin.doctors.inactive') }}</v-chip>
+                </template>
+              </v-list-item>
+            </template>
+          </v-autocomplete>
         </v-col>
         <v-col cols="12" sm="2">
           <v-select
@@ -353,6 +406,10 @@ onMounted(async () => {
       </template>
 
       <template #item.actions="{ item }">
+        <v-btn size="small" icon variant="text" color="primary" @click="openDetail(item)">
+          <v-icon size="18">mdi-eye-outline</v-icon>
+          <v-tooltip activator="parent" location="top">{{ t('admin.appointments.detail.title') }}</v-tooltip>
+        </v-btn>
         <v-btn
           size="small"
           icon

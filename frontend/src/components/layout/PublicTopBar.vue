@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useAppTheme } from '@/composables/useAppTheme'
 import AppLogo from '@/components/ui/AppLogo.vue'
+import { uploadUrl } from '@/utils/url'
 
 const route = useRoute()
 const router = useRouter()
@@ -24,10 +25,12 @@ const initials = computed(() => {
 
 const navLinks = computed(() => [
   { label: t('nav.home'), to: { name: 'home' }, icon: 'mdi-home-outline', activeIcon: 'mdi-home' },
-  { label: t('nav.doctors'), to: { name: 'doctors' }, icon: 'mdi-stethoscope', activeIcon: 'mdi-stethoscope' },
+  { label: t('nav.doctors'), to: { name: 'doctors' }, icon: 'mdi-stethoscope', activeIcon: 'mdi-stethoscope', activeFor: ['doctors', 'doctor-profile'] },
+  { label: t('nav.clinics'), to: { name: 'clinics' }, icon: 'mdi-hospital-building', activeIcon: 'mdi-hospital-building', activeFor: ['clinics', 'clinic-profile'] },
 ])
 
 function isActive(link) {
+  if (link.activeFor) return link.activeFor.includes(route.name)
   return route.name === link.to.name
 }
 
@@ -135,7 +138,7 @@ const { isDark, toggle: toggleTheme } = useAppTheme()
         </template>
 
         <template v-else>
-          <v-menu location="bottom end">
+          <v-menu location="bottom end" :offset="8">
             <template #activator="{ props }">
               <v-btn
                 v-bind="props"
@@ -143,45 +146,83 @@ const { isDark, toggle: toggleTheme } = useAppTheme()
                 class="px-1"
                 aria-label="Account menu"
               >
-                <v-avatar
-                  size="36"
-                  color="primary"
-                  class="text-white font-weight-medium"
-                >
-                  {{ initials }}
+                <v-avatar size="36" color="primary" class="text-white font-weight-medium">
+                  <v-img v-if="auth.user?.profileImage" :src="uploadUrl(auth.user.profileImage)" cover />
+                  <span v-else>{{ initials }}</span>
                 </v-avatar>
               </v-btn>
             </template>
 
-            <v-list density="compact" min-width="220">
-              <v-list-item>
-                <div class="d-flex flex-column">
-                  <span class="font-weight-medium">
-                    {{ displayFirstName }} {{ displayLastName }}
-                  </span>
-                  <span class="text-body-2 text-medium-emphasis">
-                    @{{ displayUsername }}
-                  </span>
+            <v-card rounded="xl" min-width="248" elevation="12" class="user-menu-card">
+              <!-- Header -->
+              <div class="user-menu-header pa-4">
+                <div class="d-flex align-center ga-3">
+                  <v-avatar size="46" color="primary" class="text-white font-weight-bold user-menu-avatar flex-shrink-0">
+                    <v-img v-if="auth.user?.profileImage" :src="uploadUrl(auth.user.profileImage)" cover />
+                    <span v-else>{{ initials }}</span>
+                  </v-avatar>
+                  <div style="min-width: 0;">
+                    <div class="text-subtitle-2 font-weight-bold text-truncate">
+                      {{ displayFirstName }} {{ displayLastName }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">@{{ displayUsername }}</div>
+                    <v-chip v-if="auth.isAdmin" size="x-small" color="deep-purple" variant="tonal" class="mt-1 font-weight-medium">
+                      <v-icon start size="10">mdi-shield-crown</v-icon>
+                      {{ t('profile.roleAdmin') }}
+                    </v-chip>
+                    <v-chip v-else-if="auth.isClinicAdmin" size="x-small" color="indigo" variant="tonal" class="mt-1 font-weight-medium">
+                      <v-icon start size="10">mdi-shield-account</v-icon>
+                      {{ t('profile.roleClinicAdmin') }}
+                    </v-chip>
+                  </div>
                 </div>
-              </v-list-item>
+              </div>
 
-              <v-divider class="my-1" />
+              <v-divider />
 
-              <v-list-item
-                :title="t('nav.myProfile')"
-                :to="{ name: 'me' }"
-              />
-              <v-list-item
-                v-if="auth.isAdmin || auth.isClinicAdmin"
-                prepend-icon="mdi-shield-crown"
-                :title="t('admin.nav.panel')"
-                :to="{ name: 'admin-doctors' }"
-              />
-              <v-list-item
-                :title="t('nav.logout')"
-                @click="logout"
-              />
-            </v-list>
+              <div class="pa-2">
+                <v-list density="compact" nav class="pa-0">
+                  <v-list-item
+                    :to="{ name: 'me' }"
+                    rounded="lg"
+                    class="user-menu-item"
+                  >
+                    <template #prepend>
+                      <v-icon size="17" class="mr-1">mdi-account-outline</v-icon>
+                    </template>
+                    <v-list-item-title class="text-body-2 font-weight-medium">{{ t('nav.myProfile') }}</v-list-item-title>
+                  </v-list-item>
+
+                  <v-list-item
+                    v-if="auth.isAdmin || auth.isClinicAdmin"
+                    :to="{ name: 'admin-doctors' }"
+                    rounded="lg"
+                    color="primary"
+                    class="user-menu-item"
+                  >
+                    <template #prepend>
+                      <v-icon size="17" class="mr-1">mdi-shield-crown-outline</v-icon>
+                    </template>
+                    <v-list-item-title class="text-body-2 font-weight-medium">{{ t('admin.nav.panel') }}</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+
+                <v-divider class="my-2" />
+
+                <v-list density="compact" nav class="pa-0">
+                  <v-list-item
+                    rounded="lg"
+                    class="user-menu-item user-menu-item--logout"
+                    @click="logout"
+                  >
+                    <template #prepend>
+                      <v-icon size="17" class="mr-1">mdi-logout</v-icon>
+                    </template>
+                    <v-list-item-title class="text-body-2 font-weight-medium">{{ t('nav.logout') }}</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </div>
+            </v-card>
           </v-menu>
         </template>
       </div>
@@ -213,7 +254,8 @@ const { isDark, toggle: toggleTheme } = useAppTheme()
       <div v-if="isAuthenticated" class="mobile-user-section pa-4">
         <div class="d-flex align-center ga-3">
           <v-avatar size="40" color="primary" class="text-white font-weight-medium">
-            {{ initials }}
+            <v-img v-if="auth.user?.profileImage" :src="uploadUrl(auth.user.profileImage)" cover />
+            <span v-else>{{ initials }}</span>
           </v-avatar>
           <div>
             <div class="text-subtitle-2 font-weight-bold">
@@ -427,6 +469,33 @@ const { isDark, toggle: toggleTheme } = useAppTheme()
 
 .mobile-user-section {
   background: rgba(var(--v-theme-primary), 0.04);
+}
+
+/* ── User menu dropdown ───────────────────────────────────────────────────── */
+.user-menu-card {
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+  overflow: hidden;
+}
+
+.user-menu-header {
+  background: rgba(var(--v-theme-primary), 0.05);
+}
+
+.user-menu-avatar {
+  font-size: 16px;
+  box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.18);
+}
+
+.user-menu-item {
+  min-height: 38px !important;
+}
+
+.user-menu-item--logout {
+  color: rgb(var(--v-theme-error)) !important;
+}
+
+.user-menu-item--logout :deep(.v-icon) {
+  color: rgb(var(--v-theme-error)) !important;
 }
 
 @media (max-width: 959px) {
