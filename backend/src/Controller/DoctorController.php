@@ -31,11 +31,25 @@ final class DoctorController extends AbstractController
             ? (bool) $request->query->getInt('acceptsInsurance')
             : null;
 
+        $availableFrom = null;
+        $availableTo   = null;
+        $fromStr = $request->query->get('availableFrom');
+        $toStr   = $request->query->get('availableTo');
+        if (is_string($fromStr) && $fromStr !== '' && is_string($toStr) && $toStr !== '') {
+            try {
+                $availableFrom = new \DateTimeImmutable($fromStr);
+                $availableTo   = new \DateTimeImmutable($toStr);
+            } catch (\Exception) {
+            }
+        }
+
         $doctors = $doctorRepository->findActiveDoctorsWithFilters(
             clinicId: $clinicId,
             specialtySlug: $specialtySlug,
             acceptsInsurance: $acceptsInsurance,
             city: $city,
+            availableFrom: $availableFrom,
+            availableTo: $availableTo,
         );
 
         return $this->json($doctors, context: ['groups' => ['doctor:list']]);
@@ -132,6 +146,19 @@ final class DoctorController extends AbstractController
         }
 
         $slots = $timeSlotRepository->findAvailableSlotsForDoctor($id);
+
+        $workDays  = $doctor->getWorkDays();
+        $startHour = $doctor->getStartHour();
+        $endHour   = $doctor->getEndHour();
+
+        $slots = array_values(array_filter($slots, static function ($slot) use ($workDays, $startHour, $endHour): bool {
+            $start = $slot->getStartAt();
+            if (!in_array((int) $start->format('N'), $workDays, true)) {
+                return false;
+            }
+            $hour = (int) $start->format('G');
+            return $hour >= $startHour && $hour < $endHour;
+        }));
 
         $result = array_map(
             static fn ($slot) => new TimeSlotReadDTO(

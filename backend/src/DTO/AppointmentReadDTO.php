@@ -15,6 +15,7 @@ final class AppointmentReadDTO
         public string $endAt,
         public string $serviceName,
         public string $price,
+        public int $doctorServiceId,
         public ?int $reviewId = null,
         public ?float $reviewRating = null,
     ) {

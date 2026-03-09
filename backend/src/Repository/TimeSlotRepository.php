@@ -50,6 +50,34 @@ class TimeSlotRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    /**
+     * Returns a hashtable keyed by 'Y-m-d H:i' for all existing slots
+     * of a doctor in [from, to). Used by TimeSlotGenerator for O(1) de-dup.
+     */
+    public function findExistingSlotStartTimes(
+        int $doctorId,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to
+    ): array {
+        $rows = $this->createQueryBuilder('ts')
+            ->select('ts.startAt')
+            ->where('ts.doctor = :doctorId')
+            ->andWhere('ts.startAt >= :from')
+            ->andWhere('ts.startAt < :to')
+            ->setParameter('doctorId', $doctorId)
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->getQuery()
+            ->getArrayResult();
+
+        $keys = [];
+        foreach ($rows as $row) {
+            $keys[$row['startAt']->format('Y-m-d H:i')] = true;
+        }
+
+        return $keys;
+    }
+
     public function deleteOldUnbookedSlots(\DateTimeImmutable $cutoff): int
     {
         return $this->createQueryBuilder('ts')
@@ -60,6 +88,46 @@ class TimeSlotRepository extends ServiceEntityRepository
             FROM App\Entity\Appointment a
         )')
             ->setParameter('cutoff', $cutoff)
+            ->getQuery()
+            ->execute();
+    }
+
+    /**
+     * Deletes unbooked time slots for a doctor within a date range [from, to] (inclusive by date).
+     */
+    public function deleteUnbookedSlotsInRange(
+        int $doctorId,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to
+    ): int {
+        $rangeStart = $from->setTime(0, 0, 0);
+        $rangeEnd   = $to->setTime(23, 59, 59);
+
+        return $this->createQueryBuilder('ts')
+            ->delete()
+            ->where('ts.doctor = :doctorId')
+            ->andWhere('ts.startAt >= :rangeStart')
+            ->andWhere('ts.startAt <= :rangeEnd')
+            ->andWhere('ts.isBooked = false')
+            ->setParameter('doctorId', $doctorId)
+            ->setParameter('rangeStart', $rangeStart)
+            ->setParameter('rangeEnd', $rangeEnd)
+            ->getQuery()
+            ->execute();
+    }
+
+    /**
+     * Deletes all future unbooked slots for a doctor (used when schedule changes).
+     */
+    public function deleteAllFutureUnbookedForDoctor(int $doctorId): int
+    {
+        return $this->createQueryBuilder('ts')
+            ->delete()
+            ->where('ts.doctor = :doctorId')
+            ->andWhere('ts.startAt > :now')
+            ->andWhere('ts.isBooked = false')
+            ->setParameter('doctorId', $doctorId)
+            ->setParameter('now', new \DateTimeImmutable())
             ->getQuery()
             ->execute();
     }

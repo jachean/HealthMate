@@ -61,6 +61,16 @@ function formatChartLabel(raw) {
   return raw
 }
 
+// ── Revenue chart helpers ──────────────────────────────────────────────────────
+const revenueMax = computed(() => {
+  if (!data.value?.revenue?.revenueByPeriod?.length) return 1
+  return Math.max(...data.value.revenue.revenueByPeriod.map(d => d.revenue), 1)
+})
+
+function revBarPct(value) {
+  return Math.round((value / revenueMax.value) * 100)
+}
+
 // ── Misc helpers ──────────────────────────────────────────────────────────────
 function starLabel(rating) {
   return (+rating % 1 ? '½' : +rating) + ' ★'
@@ -402,6 +412,147 @@ function ratingTotal(dist) {
           </v-card>
         </v-col>
       </v-row>
+      <!-- ── Revenue ──────────────────────────────────────────────────────── -->
+      <template v-if="data.revenue">
+        <!-- Revenue KPI cards -->
+        <v-row dense class="mt-2 mb-2">
+          <v-col cols="12" sm="6">
+            <v-card variant="tonal" color="teal" rounded="lg">
+              <v-card-text class="pa-4">
+                <div class="d-flex align-center justify-space-between mb-2">
+                  <span class="text-caption font-weight-medium text-uppercase">{{ t('admin.analytics.revenue.totalRevenue') }}</span>
+                  <v-icon size="20" color="teal">mdi-currency-usd</v-icon>
+                </div>
+                <div class="text-h4 font-weight-bold">
+                  {{ data.revenue.totalRevenue.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                  <span class="text-h6">{{ t('admin.analytics.revenue.ron') }}</span>
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+
+          <v-col cols="12" sm="6">
+            <v-card variant="tonal" color="cyan" rounded="lg">
+              <v-card-text class="pa-4">
+                <div class="d-flex align-center justify-space-between mb-2">
+                  <span class="text-caption font-weight-medium text-uppercase">{{ t('admin.analytics.revenue.avgRevenue') }}</span>
+                  <v-icon size="20" color="cyan">mdi-chart-line</v-icon>
+                </div>
+                <div class="text-h4 font-weight-bold">
+                  {{ data.revenue.avgRevenue.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                  <span class="text-h6">{{ t('admin.analytics.revenue.ron') }}</span>
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- Revenue chart -->
+        <v-card rounded="lg" class="mb-4">
+          <v-card-text class="pa-4">
+            <div class="text-subtitle-1 font-weight-bold mb-4">{{ t('admin.analytics.revenue.chart') }}</div>
+            <div v-if="data.revenue.revenueByPeriod.length" class="bar-chart-wrap">
+              <div class="bar-chart">
+                <div
+                  v-for="item in data.revenue.revenueByPeriod"
+                  :key="item.label"
+                  class="bar-col"
+                >
+                  <v-tooltip :text="`${item.revenue.toLocaleString('ro-RO', { minimumFractionDigits: 2 })} RON`" location="top">
+                    <template #activator="{ props }">
+                      <div v-bind="props" class="bar-stack">
+                        <div
+                          class="bar-segment bar-revenue"
+                          :style="{ height: revBarPct(item.revenue) + '%' }"
+                        ></div>
+                      </div>
+                    </template>
+                  </v-tooltip>
+                  <div class="bar-label">{{ formatChartLabel(item.label) }}</div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-center text-medium-emphasis py-8">
+              {{ t('admin.analytics.revenue.noData') }}
+            </div>
+          </v-card-text>
+        </v-card>
+
+        <!-- Top by revenue -->
+        <v-row dense class="mb-4">
+          <v-col cols="12" md="6">
+            <v-card rounded="lg" height="100%">
+              <v-card-text class="pa-4">
+                <div class="text-subtitle-1 font-weight-bold mb-3">
+                  <v-icon size="18" class="mr-1">mdi-doctor</v-icon>
+                  {{ t('admin.analytics.revenue.topByDoctor') }}
+                </div>
+                <div v-if="data.revenue.topDoctors.length" class="ranking-list">
+                  <div
+                    v-for="(doc, i) in data.revenue.topDoctors"
+                    :key="doc.id"
+                    class="ranking-item"
+                  >
+                    <span class="rank-num text-medium-emphasis">{{ i + 1 }}</span>
+                    <div class="rank-info">
+                      <div class="text-body-2 font-weight-medium">{{ doc.name }}</div>
+                      <v-progress-linear
+                        :model-value="revBarPct(doc.revenue)"
+                        color="teal"
+                        bg-color="transparent"
+                        rounded
+                        height="4"
+                        class="mt-1"
+                      />
+                    </div>
+                    <div class="rank-meta">
+                      <span class="text-body-2 font-weight-bold">{{ doc.revenue.toLocaleString('ro-RO', { minimumFractionDigits: 0 }) }}</span>
+                      <span class="text-caption text-medium-emphasis ml-1">RON</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="text-center text-medium-emphasis py-6">{{ t('admin.analytics.revenue.noData') }}</div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+
+          <v-col cols="12" md="6">
+            <v-card rounded="lg" height="100%">
+              <v-card-text class="pa-4">
+                <div class="text-subtitle-1 font-weight-bold mb-3">
+                  <v-icon size="18" class="mr-1">mdi-stethoscope</v-icon>
+                  {{ t('admin.analytics.revenue.topByService') }}
+                </div>
+                <div v-if="data.revenue.topServices.length" class="ranking-list">
+                  <div
+                    v-for="(svc, i) in data.revenue.topServices"
+                    :key="svc.name"
+                    class="ranking-item"
+                  >
+                    <span class="rank-num text-medium-emphasis">{{ i + 1 }}</span>
+                    <div class="rank-info">
+                      <div class="text-body-2 font-weight-medium">{{ svc.name }}</div>
+                      <v-progress-linear
+                        :model-value="revBarPct(svc.revenue)"
+                        color="cyan"
+                        bg-color="transparent"
+                        rounded
+                        height="4"
+                        class="mt-1"
+                      />
+                    </div>
+                    <div class="rank-meta">
+                      <span class="text-body-2 font-weight-bold">{{ svc.revenue.toLocaleString('ro-RO', { minimumFractionDigits: 0 }) }}</span>
+                      <span class="text-caption text-medium-emphasis ml-1">RON</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="text-center text-medium-emphasis py-6">{{ t('admin.analytics.revenue.noData') }}</div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </template>
     </template>
   </div>
 </template>
@@ -454,6 +605,12 @@ function ratingTotal(dist) {
   background: rgb(var(--v-theme-error));
   opacity: 0.7;
   border-radius: 0;
+}
+
+.bar-revenue {
+  background: rgb(var(--v-theme-teal));
+  opacity: 0.85;
+  border-radius: 3px 3px 0 0;
 }
 
 .bar-booked:first-child {

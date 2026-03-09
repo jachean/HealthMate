@@ -5,6 +5,8 @@ import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import api from '@/lib/api'
 import { isoToHHmm, isoToDateKey, formatSlotRange } from '@/utils/date'
+import { uploadUrl } from '@/utils/url'
+import DoctorBookingDialog from '@/components/doctors/DoctorBookingDialog.vue'
 
 const { t, locale } = useI18n()
 
@@ -20,6 +22,86 @@ const initials = computed(() => {
   return (f.charAt(0) + l.charAt(0)).toUpperCase()
 })
 
+// ── Edit profile ──────────────────────────────────────────────────────────────
+const editDialogOpen  = ref(false)
+const editFirstName   = ref('')
+const editLastName    = ref('')
+const editUsername    = ref('')
+const editSaving      = ref(false)
+const editError       = ref(null)
+const editSuccess     = ref(false)
+const editFieldErrors = ref({})
+
+// Avatar upload
+const avatarInput     = ref(null)
+const avatarUploading = ref(false)
+const avatarError     = ref(null)
+
+function openEditDialog() {
+  editFirstName.value   = auth.user?.firstName || ''
+  editLastName.value    = auth.user?.lastName  || ''
+  editUsername.value    = auth.user?.username  || ''
+  editError.value       = null
+  editFieldErrors.value = {}
+  editSuccess.value     = false
+  editDialogOpen.value  = true
+}
+
+async function saveProfile() {
+  if (editSaving.value) return
+  editSaving.value      = true
+  editError.value       = null
+  editFieldErrors.value = {}
+
+  try {
+    const { data } = await api.patch('/api/me', {
+      firstName: editFirstName.value,
+      lastName:  editLastName.value,
+      username:  editUsername.value,
+    })
+    auth.user = { ...auth.user, ...data }
+    editSuccess.value = true
+    setTimeout(() => { editDialogOpen.value = false }, 1400)
+  } catch (e) {
+    const errors = e?.response?.data?.errors
+    if (errors) {
+      editFieldErrors.value = errors
+    } else {
+      editError.value = t('profile.updateError')
+    }
+  } finally {
+    editSaving.value = false
+  }
+}
+
+function triggerAvatarInput() {
+  avatarInput.value?.click()
+}
+
+async function onAvatarChange(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  avatarUploading.value = true
+  avatarError.value     = null
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    const { data } = await api.post('/api/me/upload-avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    auth.user = { ...auth.user, profileImage: data.profileImage }
+  } catch {
+    avatarError.value = t('profile.uploadError')
+  } finally {
+    avatarUploading.value = false
+    // Reset so same file can be re-selected
+    event.target.value = ''
+  }
+}
+
 // ── Appointments ──────────────────────────────────────────────────────────────
 const appointments = ref([])
 const loading = ref(true)
@@ -34,6 +116,12 @@ const paginatedAppointments = computed(() => {
   const start = (page.value - 1) * perPage
   return appointments.value.slice(start, start + perPage)
 })
+
+const pendingReviews = computed(() =>
+  appointments.value.filter(
+    a => a.status === 'booked' && isInThePast(a.startAt) && !a.reviewId
+  )
+)
 
 onMounted(async () => {
   try {
@@ -57,6 +145,8 @@ function openDetail(appt) {
 
 function closeDetail() {
   dialogOpen.value = false
+  cancelConfirming.value = false
+  cancelError.value = null
 }
 
 // ── Formatting helpers ────────────────────────────────────────────────────────
@@ -90,6 +180,54 @@ function statusColor(status) {
 function logout() {
   auth.logout()
   router.push({ name: 'home' })
+}
+
+// ── Cancel appointment ────────────────────────────────────────────────────────
+const cancelConfirming = ref(false)
+const cancelling = ref(false)
+const cancelError = ref(null)
+
+function isUpcoming(iso) {
+  return iso && new Date(iso) > new Date()
+}
+
+async function cancelAppointment() {
+  if (cancelling.value) return
+  cancelling.value = true
+  cancelError.value = null
+
+  const apptId = selectedAppointment.value.id
+
+  try {
+    const { data } = await api.patch(`/api/appointments/${apptId}/cancel`)
+    const appt = appointments.value.find(a => a.id === apptId)
+    if (appt) appt.status = data.status
+    selectedAppointment.value = { ...selectedAppointment.value, status: data.status }
+    cancelConfirming.value = false
+  } catch (e) {
+    cancelError.value = e?.response?.data?.error?.message || t('admin.appointments.errorCancelFailed')
+  } finally {
+    cancelling.value = false
+  }
+}
+
+// ── Re-booking ─────────────────────────────────────────────────────────────────
+const reBookDoctor = ref(null)
+const reBookServiceId = ref(null)
+const reBookLoading = ref(false)
+const reBookDialogOpen = ref(false)
+
+async function startReBook(appt) {
+  reBookLoading.value = true
+  try {
+    const { data } = await api.get(`/api/doctors/${appt.doctorId}`)
+    reBookDoctor.value = data
+    reBookServiceId.value = appt.doctorServiceId
+    closeDetail()
+    reBookDialogOpen.value = true
+  } finally {
+    reBookLoading.value = false
+  }
 }
 
 // ── Review dialog ──────────────────────────────────────────────────────────────
@@ -189,10 +327,24 @@ async function submitReview() {
     <!-- ── Profile card ───────────────────────────────────────────────────── -->
     <v-card flat rounded="xl" class="profile-card mb-8 pa-6">
       <div class="d-flex align-center flex-wrap ga-5">
-        <!-- Avatar -->
-        <v-avatar size="80" color="primary" class="profile-avatar text-white font-weight-bold flex-shrink-0">
-          <span class="avatar-initials">{{ initials }}</span>
-        </v-avatar>
+        <!-- Avatar with upload overlay -->
+        <div class="avatar-wrapper flex-shrink-0" @click="triggerAvatarInput">
+          <v-avatar size="80" color="primary" class="profile-avatar text-white font-weight-bold">
+            <v-img v-if="auth.user?.profileImage" :src="uploadUrl(auth.user.profileImage)" cover />
+            <span v-else class="avatar-initials">{{ initials }}</span>
+          </v-avatar>
+          <div class="avatar-overlay">
+            <v-progress-circular v-if="avatarUploading" indeterminate color="white" size="22" width="2" />
+            <v-icon v-else color="white" size="20">mdi-camera</v-icon>
+          </div>
+          <input
+            ref="avatarInput"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            style="display:none"
+            @change="onAvatarChange"
+          />
+        </div>
 
         <!-- Info -->
         <div class="flex-grow-1">
@@ -205,14 +357,54 @@ async function submitReview() {
             </v-chip>
             <span class="text-body-2 text-medium-emphasis">{{ auth.user?.email }}</span>
           </div>
+          <v-alert
+            v-if="avatarError"
+            type="error"
+            variant="tonal"
+            density="compact"
+            rounded="lg"
+            class="mt-2"
+            closable
+            @click:close="avatarError = null"
+          >
+            {{ avatarError }}
+          </v-alert>
         </div>
 
         <!-- Actions -->
         <div class="d-flex flex-column align-end ga-3">
-          <v-chip size="small" variant="outlined" label class="text-caption font-weight-medium">
-            <v-icon start size="13">mdi-identifier</v-icon>
-            {{ t('profile.patientId') }} #{{ auth.user?.id }}
+          <v-chip
+            v-if="auth.isAdmin"
+            size="small"
+            color="deep-purple"
+            variant="tonal"
+            label
+            class="text-caption font-weight-medium"
+          >
+            <v-icon start size="13">mdi-shield-crown</v-icon>
+            {{ t('profile.roleAdmin') }}
           </v-chip>
+          <v-chip
+            v-else-if="auth.isClinicAdmin"
+            size="small"
+            color="indigo"
+            variant="tonal"
+            label
+            class="text-caption font-weight-medium"
+          >
+            <v-icon start size="13">mdi-shield-account</v-icon>
+            {{ t('profile.roleClinicAdmin') }}
+          </v-chip>
+          <v-btn
+            variant="tonal"
+            color="primary"
+            size="small"
+            prepend-icon="mdi-pencil-outline"
+            rounded="lg"
+            @click="openEditDialog"
+          >
+            {{ t('profile.editProfile') }}
+          </v-btn>
           <v-btn
             variant="tonal"
             color="error"
@@ -237,6 +429,37 @@ async function submitReview() {
         </v-chip>
       </div>
       <div class="text-body-2 text-medium-emphasis">{{ t('profile.appointmentsSubtitle') }}</div>
+    </div>
+
+    <!-- Pending reviews nudge -->
+    <div v-if="!loading && !fetchError && pendingReviews.length > 0" class="pending-reviews-section mb-6">
+      <div class="d-flex align-center ga-2 mb-3">
+        <v-icon size="18" color="amber-darken-2">mdi-star-plus-outline</v-icon>
+        <span class="text-subtitle-2 font-weight-bold">{{ t('profile.pendingReviews') }}</span>
+        <v-chip size="x-small" color="amber-darken-2" variant="tonal">{{ pendingReviews.length }}</v-chip>
+      </div>
+      <v-card
+        v-for="appt in pendingReviews"
+        :key="appt.id"
+        flat
+        rounded="xl"
+        class="pending-review-card mb-2"
+        @click="openReviewDialog(appt)"
+      >
+        <div class="d-flex align-center ga-3 pa-4">
+          <v-avatar color="amber-darken-2" variant="tonal" size="38" class="flex-shrink-0">
+            <v-icon size="18">mdi-star-plus-outline</v-icon>
+          </v-avatar>
+          <div class="flex-grow-1 overflow-hidden">
+            <div class="text-body-2 font-weight-bold">{{ appt.doctorName }}</div>
+            <div class="text-caption text-medium-emphasis">{{ appt.serviceName }} &middot; {{ formatDate(appt.startAt) }}</div>
+          </div>
+          <v-btn size="small" color="amber-darken-2" variant="flat" rounded="lg" class="flex-shrink-0">
+            <v-icon start size="14">mdi-star-plus</v-icon>
+            {{ t('review.leave') }}
+          </v-btn>
+        </div>
+      </v-card>
     </div>
 
     <!-- Loading -->
@@ -456,14 +679,62 @@ async function submitReview() {
       </div>
 
       <!-- Footer -->
-      <div class="pa-5 pt-0">
-        <v-btn color="primary" variant="tonal" block rounded="lg" @click="closeDetail">
-          {{ t('profile.close') }}
-        </v-btn>
+      <div class="pa-5 pt-0 d-flex flex-column ga-3">
+        <v-alert v-if="cancelError" type="error" variant="tonal" density="compact" rounded="lg">
+          {{ cancelError }}
+        </v-alert>
+
+        <template v-if="selectedAppointment.status === 'booked' && isUpcoming(selectedAppointment.startAt)">
+          <div v-if="!cancelConfirming" class="d-flex flex-column ga-2">
+            <div class="d-flex ga-2">
+              <v-btn color="primary" variant="tonal" rounded="lg" style="flex:1" @click="closeDetail">
+                {{ t('profile.close') }}
+              </v-btn>
+              <v-btn color="primary" rounded="lg" style="flex:1" :loading="reBookLoading" @click="startReBook(selectedAppointment)">
+                <v-icon start size="16">mdi-calendar-refresh-outline</v-icon>
+                {{ t('profile.reBook') }}
+              </v-btn>
+            </div>
+            <v-btn color="error" variant="tonal" rounded="lg" block @click="cancelConfirming = true">
+              <v-icon start size="16">mdi-calendar-remove-outline</v-icon>
+              {{ t('admin.appointments.cancelTitle') }}
+            </v-btn>
+          </div>
+          <div v-else class="d-flex flex-column ga-2">
+            <div class="text-body-2 text-center text-medium-emphasis">{{ t('admin.appointments.cancelText') }}</div>
+            <div class="d-flex ga-2">
+              <v-btn variant="tonal" rounded="lg" style="flex:1" :disabled="cancelling" @click="cancelConfirming = false">
+                {{ t('profile.cancel') }}
+              </v-btn>
+              <v-btn color="error" rounded="lg" style="flex:1" :loading="cancelling" @click="cancelAppointment">
+                {{ t('admin.appointments.cancelConfirm') }}
+              </v-btn>
+            </div>
+          </div>
+        </template>
+
+        <div v-else class="d-flex ga-2">
+          <v-btn color="primary" variant="tonal" rounded="lg" style="flex:1" @click="closeDetail">
+            {{ t('profile.close') }}
+          </v-btn>
+          <v-btn color="primary" rounded="lg" :loading="reBookLoading" @click="startReBook(selectedAppointment)">
+            <v-icon start size="16">mdi-calendar-refresh-outline</v-icon>
+            {{ t('profile.reBook') }}
+          </v-btn>
+        </div>
       </div>
 
     </v-card>
   </v-dialog>
+
+  <!-- ── Re-booking dialog ─────────────────────────────────────────────────────── -->
+  <DoctorBookingDialog
+    v-if="reBookDoctor"
+    v-model="reBookDialogOpen"
+    :doctor="reBookDoctor"
+    :pre-selected-service-id="reBookServiceId"
+    @update:model-value="val => { if (!val) { reBookDoctor = null; reBookServiceId = null } }"
+  />
 
   <!-- ── Review dialog ────────────────────────────────────────────────────────── -->
   <v-dialog v-model="reviewDialogOpen" max-width="420" rounded="xl">
@@ -476,6 +747,28 @@ async function submitReview() {
         <v-btn icon variant="text" size="x-small" @click="closeReviewDialog">
           <v-icon size="18">mdi-close</v-icon>
         </v-btn>
+      </div>
+
+      <v-divider />
+
+      <!-- Appointment context -->
+      <div v-if="reviewTargetAppt" class="review-appt-context px-5 py-3">
+        <div class="review-context-row">
+          <v-icon size="14" color="primary">mdi-doctor</v-icon>
+          <span class="text-body-2 font-weight-medium">{{ reviewTargetAppt.doctorName }}</span>
+        </div>
+        <div class="review-context-row">
+          <v-icon size="14" color="primary">mdi-clipboard-pulse-outline</v-icon>
+          <span class="text-caption text-medium-emphasis">{{ reviewTargetAppt.serviceName }}</span>
+        </div>
+        <div class="review-context-row">
+          <v-icon size="14" color="primary">mdi-calendar-outline</v-icon>
+          <span class="text-caption text-medium-emphasis">{{ formatDate(reviewTargetAppt.startAt) }} &middot; {{ formatSlotRange(reviewTargetAppt.startAt, reviewTargetAppt.endAt) }}</span>
+        </div>
+        <div class="review-context-row">
+          <v-icon size="14" color="primary">mdi-hospital-building</v-icon>
+          <span class="text-caption text-medium-emphasis">{{ reviewTargetAppt.clinicName }}</span>
+        </div>
       </div>
 
       <v-divider />
@@ -573,6 +866,92 @@ async function submitReview() {
       </div>
     </v-card>
   </v-dialog>
+
+  <!-- ── Edit profile dialog ────────────────────────────────────────────────── -->
+  <v-dialog v-model="editDialogOpen" max-width="440" rounded="xl">
+    <v-card rounded="xl" class="edit-profile-card">
+
+      <!-- Header -->
+      <div class="d-flex align-center justify-space-between pa-5 pb-4">
+        <div class="text-subtitle-1 font-weight-bold">{{ t('profile.editProfileTitle') }}</div>
+        <v-btn icon variant="text" size="x-small" @click="editDialogOpen = false">
+          <v-icon size="18">mdi-close</v-icon>
+        </v-btn>
+      </div>
+
+      <v-divider />
+
+      <div class="pa-5">
+
+        <!-- Success state -->
+        <div v-if="editSuccess" class="d-flex flex-column align-center py-6 text-center">
+          <v-icon color="success" size="52" class="mb-3">mdi-check-circle</v-icon>
+          <div class="text-subtitle-1 font-weight-bold">{{ t('profile.saveSuccess') }}</div>
+        </div>
+
+        <!-- Form -->
+        <template v-else>
+          <div class="d-flex ga-3 mb-4">
+            <v-text-field
+              v-model="editFirstName"
+              :label="t('profile.firstName')"
+              :error-messages="editFieldErrors.firstName"
+              variant="outlined"
+              rounded="lg"
+              density="compact"
+              hide-details="auto"
+            />
+            <v-text-field
+              v-model="editLastName"
+              :label="t('profile.lastName')"
+              :error-messages="editFieldErrors.lastName"
+              variant="outlined"
+              rounded="lg"
+              density="compact"
+              hide-details="auto"
+            />
+          </div>
+
+          <v-text-field
+            v-model="editUsername"
+            :label="t('profile.username')"
+            :error-messages="editFieldErrors.username"
+            variant="outlined"
+            rounded="lg"
+            density="compact"
+            hide-details="auto"
+            prefix="@"
+            class="mb-4"
+          />
+
+          <v-alert v-if="editError" type="error" variant="tonal" density="compact" rounded="lg" class="mb-4">
+            {{ editError }}
+          </v-alert>
+
+          <div class="d-flex ga-2">
+            <v-btn
+              variant="tonal"
+              rounded="lg"
+              style="flex:1"
+              :disabled="editSaving"
+              @click="editDialogOpen = false"
+            >
+              {{ t('profile.cancel') }}
+            </v-btn>
+            <v-btn
+              color="primary"
+              rounded="lg"
+              style="flex:1"
+              :loading="editSaving"
+              @click="saveProfile"
+            >
+              {{ t('profile.saveChanges') }}
+            </v-btn>
+          </div>
+        </template>
+      </div>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style scoped>
@@ -586,6 +965,28 @@ async function submitReview() {
   );
 }
 
+.avatar-wrapper {
+  position: relative;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
 .profile-avatar {
   font-size: 26px;
   box-shadow: 0 0 0 4px rgba(var(--v-theme-primary), 0.12);
@@ -594,6 +995,11 @@ async function submitReview() {
 .avatar-initials {
   font-size: 26px;
   letter-spacing: 1px;
+}
+
+/* ── Edit profile dialog ──────────────────────────────────────────────────── */
+.edit-profile-card {
+  overflow: hidden;
 }
 
 /* ── Section header ───────────────────────────────────────────────────────── */
@@ -677,6 +1083,19 @@ async function submitReview() {
   opacity: 0.55;
 }
 
+/* ── Pending reviews ──────────────────────────────────────────────────────── */
+.pending-review-card {
+  border: 1px solid rgba(255, 160, 0, 0.25);
+  background: rgba(255, 160, 0, 0.04);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.pending-review-card:hover {
+  border-color: rgba(255, 160, 0, 0.5);
+  background: rgba(255, 160, 0, 0.08);
+}
+
 /* ── Detail dialog ────────────────────────────────────────────────────────── */
 .detail-card {
   overflow: hidden;
@@ -734,5 +1153,18 @@ async function submitReview() {
 
 .review-dialog-card {
   overflow: hidden;
+}
+
+.review-appt-context {
+  background: rgba(var(--v-theme-surface-variant), 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.review-context-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 </style>

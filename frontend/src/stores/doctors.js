@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import api from '@/lib/api'
+import { uploadUrl } from '@/utils/url'
 
 // Default filter state - single source of truth
 const createDefaultFilters = () => ({
@@ -8,13 +9,38 @@ const createDefaultFilters = () => ({
   specialty: [],
   acceptsInsurance: false,
   search: '',
+  availability: null, // null | 'this_week' | 'YYYY-MM-DD'
 })
+
+function toLocalDateStr(date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+function availabilityParams(availability) {
+  if (!availability) return {}
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  if (availability === 'this_week') {
+    const to = new Date(today)
+    to.setDate(to.getDate() + 7)
+    return { availableFrom: toLocalDateStr(today), availableTo: toLocalDateStr(to) }
+  }
+  // specific date
+  const from = new Date(availability + 'T00:00:00')
+  const to = new Date(from)
+  to.setDate(to.getDate() + 1)
+  return { availableFrom: toLocalDateStr(from), availableTo: toLocalDateStr(to) }
+}
 
 function normalizeDoctor(dto) {
   return {
     id: dto.id,
     fullName: `${dto.firstName} ${dto.lastName}`,
     acceptsInsurance: dto.acceptsInsurance,
+    avatarPath: uploadUrl(dto.avatarPath),
     clinic: dto.clinic
       ? { id: dto.clinic.id, name: dto.clinic.name, city: dto.clinic.city, address: dto.clinic.address }
       : null,
@@ -113,12 +139,13 @@ export const useDoctorsStore = defineStore('doctors', {
       this.loading = true
 
       // Snapshot filters to prevent reactive timing issues
-      const { city, clinic, specialty, acceptsInsurance, search } = {
+      const { city, clinic, specialty, acceptsInsurance, search, availability } = {
         city: [...(this.filters.city || [])],
         clinic: [...(this.filters.clinic || [])],
         specialty: [...(this.filters.specialty || [])],
         acceptsInsurance: !!this.filters.acceptsInsurance,
         search: (this.filters.search || '').trim(),
+        availability: this.filters.availability || null,
       }
 
       try {
@@ -128,6 +155,7 @@ export const useDoctorsStore = defineStore('doctors', {
         if (clinic.length === 1) params.clinic = clinic[0]
         if (specialty.length === 1) params.specialty = specialty[0]
         if (acceptsInsurance) params.acceptsInsurance = 1
+        Object.assign(params, availabilityParams(availability))
 
         const { data } = await api.get('/api/doctors', { params })
 
@@ -152,6 +180,7 @@ export const useDoctorsStore = defineStore('doctors', {
         specialty: query.specialty ? [query.specialty] : [],
         acceptsInsurance: query.acceptsInsurance === '1',
         search: query.search || '',
+        availability: query.availability || null,
       }
     },
 

@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppTheme } from '@/composables/useAppTheme'
 import { useAuthStore } from '@/stores/auth'
+import { uploadUrl } from '@/utils/url'
 
 const { t, locale } = useI18n()
 const { isDark, toggle: toggleTheme } = useAppTheme()
@@ -22,6 +23,12 @@ const navItems = computed(() =>
     ? allNavItems.filter(item => item.clinicAdminVisible)
     : allNavItems
 )
+
+const initials = computed(() => {
+  const f = auth.user?.firstName || ''
+  const l = auth.user?.lastName || ''
+  return (f.charAt(0) + l.charAt(0)).toUpperCase()
+})
 
 const localeMenuOpen = ref(false)
 
@@ -88,6 +95,22 @@ function switchLocale(lang) {
         :to="{ name: 'home' }"
       />
     </v-list>
+
+    <template #append>
+      <v-divider />
+      <div class="pa-3 d-flex align-center ga-3">
+        <v-avatar size="34" color="primary" class="text-white font-weight-medium flex-shrink-0">
+          <v-img v-if="auth.user?.profileImage" :src="uploadUrl(auth.user.profileImage)" cover />
+          <span v-else style="font-size:13px">{{ initials }}</span>
+        </v-avatar>
+        <div style="min-width:0">
+          <div class="text-body-2 font-weight-medium text-truncate">
+            {{ auth.user?.firstName }} {{ auth.user?.lastName }}
+          </div>
+          <div class="text-caption text-medium-emphasis text-truncate">{{ auth.user?.email }}</div>
+        </div>
+      </div>
+    </template>
   </v-navigation-drawer>
 
   <v-main>

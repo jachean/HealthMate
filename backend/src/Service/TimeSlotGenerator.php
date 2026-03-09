@@ -2,32 +2,25 @@
 
 namespace App\Service;
 
-use App\Entity\Appointment;
 use App\Entity\Doctor;
-use App\Entity\DoctorService;
 use App\Entity\TimeSlot;
 use App\Repository\DoctorRepository;
-use App\Repository\DoctorServiceRepository;
+use App\Repository\DoctorUnavailabilityRepository;
 use App\Repository\TimeSlotRepository;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class TimeSlotGenerator
 {
-    private const DAYS_AHEAD = 7;
-    private const DAY_START_HOUR = 9;
-    private const DAY_END_HOUR = 17;
+    public const DAYS_AHEAD = 30;
 
+    private const BATCH_SIZE = 50;
     private const SLOT_DURATION_MINUTES = 60;
     private const SLOT_STEP_MINUTES = 30;
 
-    private const DEMO_BOOKING_PROBABILITY = 15; // %
-
     public function __construct(
         private readonly DoctorRepository $doctorRepository,
-        private readonly DoctorServiceRepository $doctorServiceRepository,
         private readonly TimeSlotRepository $timeSlotRepository,
-        private readonly UserRepository $userRepository,
+        private readonly DoctorUnavailabilityRepository $unavailabilityRepository,
         private readonly EntityManagerInterface $em
     ) {
     }
@@ -40,39 +33,77 @@ final class TimeSlotGenerator
 
     public function generateForDoctor(Doctor $doctor): void
     {
-        $this->generateSlotsForDoctor($doctor, []);
+        $this->generateSlotsForDoctor($doctor);
         $this->em->flush();
     }
 
     private function generateFutureSlots(): void
     {
-        $doctors = $this->doctorRepository->findBy(['isActive' => true]);
-        $users = $this->userRepository->findAll();
+        // Fetch only IDs so we can safely call em->clear() between batches
+        // without detaching the doctor objects we still need.
+        $ids    = $this->doctorRepository->findActiveIds();
+        $chunks = array_chunk($ids, self::BATCH_SIZE);
 
-        foreach ($doctors as $doctor) {
-            $this->generateSlotsForDoctor($doctor, $users);
+        foreach ($chunks as $idBatch) {
+            $doctors = $this->doctorRepository->findBy(['id' => $idBatch]);
+            foreach ($doctors as $doctor) {
+                $this->generateSlotsForDoctor($doctor);
+            }
+            $this->em->flush();
+            $this->em->clear(); // safe: next batch re-fetches doctors by ID
         }
-
-        $this->em->flush();
     }
 
     private function cleanupOldUnbookedSlots(): void
     {
-        $cutoff = new \DateTimeImmutable('-7 days');
+        $cutoff = new \DateTimeImmutable('today');
 
         $this->timeSlotRepository->deleteOldUnbookedSlots($cutoff);
     }
 
 
-    private function generateSlotsForDoctor(Doctor $doctor, array $users): void
+    private function generateSlotsForDoctor(Doctor $doctor): void
     {
-        $today = new \DateTimeImmutable('today');
+        $today   = new \DateTimeImmutable('today');
+        $horizon = $today->modify('+' . self::DAYS_AHEAD . ' days');
+
+        // One query for the whole range — O(1) lookup per candidate slot
+        $existing = $this->timeSlotRepository->findExistingSlotStartTimes(
+            $doctor->getId(),
+            $today,
+            $horizon
+        );
+
+        // Build a set of blocked dates for O(1) lookup
+        $unavailabilities = $this->unavailabilityRepository->findForDoctor($doctor);
+        $blockedDates = [];
+        foreach ($unavailabilities as $period) {
+            $cursor = $period->getDateFrom();
+            while ($cursor <= $period->getDateTo()) {
+                $blockedDates[$cursor->format('Y-m-d')] = true;
+                $cursor = $cursor->modify('+1 day');
+            }
+        }
+
+        $workDays  = $doctor->getWorkDays();
+        $startHour = $doctor->getStartHour();
+        $endHour   = $doctor->getEndHour();
 
         for ($day = 0; $day < self::DAYS_AHEAD; $day++) {
             $date = $today->modify("+{$day} days");
 
-            $startOfDay = $date->setTime(self::DAY_START_HOUR, 0);
-            $endOfDay = $date->setTime(self::DAY_END_HOUR, 0);
+            // format('N') → 1 (Mon) … 7 (Sun), matching ISO weekday convention
+            if (!in_array((int) $date->format('N'), $workDays, true)) {
+                continue;
+            }
+
+            // Skip blocked (unavailability) dates
+            if (isset($blockedDates[$date->format('Y-m-d')])) {
+                continue;
+            }
+
+            $startOfDay = $date->setTime($startHour, 0);
+            $endOfDay   = $date->setTime($endHour, 0);
 
             for (
                 $cursor = $startOfDay;
@@ -80,9 +111,9 @@ final class TimeSlotGenerator
                 $cursor = $cursor->modify('+' . self::SLOT_STEP_MINUTES . ' minutes')
             ) {
                 $start = $cursor;
-                $end = $cursor->modify('+' . self::SLOT_DURATION_MINUTES . ' minutes');
+                $end   = $cursor->modify('+' . self::SLOT_DURATION_MINUTES . ' minutes');
 
-                if ($this->slotExists($doctor, $start, $end)) {
+                if (isset($existing[$start->format('Y-m-d H:i')])) {
                     continue;
                 }
 
@@ -92,64 +123,8 @@ final class TimeSlotGenerator
                 $slot->setEndAt($end);
                 $slot->setIsBooked(false);
 
-                if (!empty($users) && random_int(1, 100) <= self::DEMO_BOOKING_PROBABILITY) {
-                    if (!$this->hasOverlappingAppointment($doctor, $start, $end)) {
-                        $this->createDemoAppointment($slot, $users);
-                    }
-                }
-
                 $this->em->persist($slot);
             }
         }
-    }
-
-    private function slotExists(Doctor $doctor, \DateTimeImmutable $start, \DateTimeImmutable $end): bool
-    {
-        return $this->timeSlotRepository->findOneBy([
-                'doctor' => $doctor,
-                'startAt' => $start,
-                'endAt' => $end,
-            ]) !== null;
-    }
-
-    private function hasOverlappingAppointment(
-        Doctor $doctor,
-        \DateTimeImmutable $start,
-        \DateTimeImmutable $end
-    ): bool {
-        return (bool) $this->em->createQueryBuilder()
-            ->select('1')
-            ->from(Appointment::class, 'a')
-            ->join('a.timeSlot', 'ts')
-            ->where('ts.doctor = :doctor')
-            ->andWhere('ts.startAt < :end')
-            ->andWhere('ts.endAt > :start')
-            ->setParameter('doctor', $doctor)
-            ->setParameter('start', $start)
-            ->setParameter('end', $end)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
-
-    private function createDemoAppointment(TimeSlot $slot, array $users): void
-    {
-        $doctor = $slot->getDoctor();
-        $services = $this->doctorServiceRepository->findByDoctor($doctor->getId());
-
-        if (empty($services)) {
-            return;
-        }
-
-        $user = $users[array_rand($users)];
-        $doctorService = $services[array_rand($services)];
-
-        $appointment = new Appointment();
-        $appointment->setUser($user);
-        $appointment->setTimeSlot($slot);
-        $appointment->setDoctorService($doctorService);
-
-        $slot->setIsBooked(true);
-
-        $this->em->persist($appointment);
     }
 }

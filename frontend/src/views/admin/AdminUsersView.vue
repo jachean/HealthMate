@@ -5,6 +5,7 @@ import {
   adminGetUsers, adminDeactivateUser, adminActivateUser,
   adminMakeClinicAdmin, adminRemoveClinicAdmin, adminGetClinics,
 } from '@/services/adminService'
+import { uploadUrl } from '@/utils/url'
 
 const { t } = useI18n()
 
@@ -304,7 +305,8 @@ onMounted(fetchUsers)
       <template #item.name="{ item }">
         <div class="d-flex align-center ga-2 py-1">
           <v-avatar :color="item.isActive ? 'primary' : 'error'" variant="tonal" size="32">
-            <v-icon size="16">{{ item.isActive ? 'mdi-account' : 'mdi-account-cancel' }}</v-icon>
+            <v-img v-if="item.profileImage" :src="uploadUrl(item.profileImage)" cover />
+            <v-icon v-else size="16">{{ item.isActive ? 'mdi-account' : 'mdi-account-cancel' }}</v-icon>
           </v-avatar>
           <span class="font-weight-medium">{{ item.firstName }} {{ item.lastName }}</span>
         </div>

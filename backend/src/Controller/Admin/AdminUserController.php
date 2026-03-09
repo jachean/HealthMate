@@ -139,17 +139,18 @@ class AdminUserController extends AdminController
         }
 
         return [
-            'id'                   => $user->getId(),
-            'firstName'            => $user->getFirstName(),
-            'lastName'             => $user->getLastName(),
-            'email'                => $user->getEmail(),
-            'username'             => $user->getDisplayUsername(),
-            'isAdmin'              => in_array('ROLE_ADMIN', $user->getRoles(), true),
-            'isClinicAdmin'        => in_array('ROLE_CLINIC_ADMIN', $user->getRoles(), true)
-                                      && !in_array('ROLE_ADMIN', $user->getRoles(), true),
-            'clinicAdminClinicId'  => $clinicAdminClinicId,
+            'id'                    => $user->getId(),
+            'firstName'             => $user->getFirstName(),
+            'lastName'              => $user->getLastName(),
+            'email'                 => $user->getEmail(),
+            'username'              => $user->getDisplayUsername(),
+            'profileImage'          => $user->getProfileImage(),
+            'isAdmin'               => in_array('ROLE_ADMIN', $user->getRoles(), true),
+            'isClinicAdmin'         => in_array('ROLE_CLINIC_ADMIN', $user->getRoles(), true)
+                                       && !in_array('ROLE_ADMIN', $user->getRoles(), true),
+            'clinicAdminClinicId'   => $clinicAdminClinicId,
             'clinicAdminClinicName' => $clinicAdminClinicName,
-            'isActive'             => $user->isActive(),
+            'isActive'              => $user->isActive(),
         ];
     }
 }

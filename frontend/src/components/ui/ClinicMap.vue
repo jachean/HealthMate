@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -17,6 +17,7 @@ const error = ref(false)
 
 let map = null
 let marker = null
+let resizeObserver = null
 
 const fullAddress = () => {
   const parts = [props.address, props.city].filter(Boolean)
@@ -88,10 +89,12 @@ async function initMap() {
       `, { minWidth: 200 }).openPopup()
     }
 
-    // Ensure map fills container after render
-    setTimeout(() => {
-      map.invalidateSize()
-    }, 100)
+    // Use ResizeObserver so Leaflet recalculates size once the container has real dimensions
+    if (resizeObserver) resizeObserver.disconnect()
+    resizeObserver = new ResizeObserver(() => {
+      map && map.invalidateSize()
+    })
+    resizeObserver.observe(mapContainer.value)
   } catch (e) {
     console.error('Map error:', e)
     error.value = true
@@ -102,6 +105,11 @@ async function initMap() {
 
 onMounted(() => {
   initMap()
+})
+
+onBeforeUnmount(() => {
+  if (resizeObserver) resizeObserver.disconnect()
+  if (map) map.remove()
 })
 
 watch(() => [props.address, props.city], () => {

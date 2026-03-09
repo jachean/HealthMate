@@ -20,4 +20,6 @@ class ClinicDTO
     #[Assert\NotBlank]
     #[Assert\Length(max: 100)]
     public string $city;
+
+    public ?string $logo = null;
 }

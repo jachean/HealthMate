@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\DoctorRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -25,7 +26,7 @@ class Doctor
     #[ORM\Column(length: 100)]
     private string $lastName;
 
-    #[Groups(['doctor:list'])]
+    #[Groups(['doctor:list', 'doctor:detail'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $bio = null;
 
@@ -36,6 +37,19 @@ class Doctor
     #[Groups(['doctor:list'])]
     #[ORM\Column]
     private bool $isActive;
+
+    /** Work days as ISO weekday numbers: 1=Mon … 7=Sun */
+    #[Groups(['doctor:list', 'doctor:detail'])]
+    #[ORM\Column(type: Types::JSON)]
+    private array $workDays = [1, 2, 3, 4, 5];
+
+    #[Groups(['doctor:list', 'doctor:detail'])]
+    #[ORM\Column(type: Types::SMALLINT)]
+    private int $startHour = 9;
+
+    #[Groups(['doctor:list', 'doctor:detail'])]
+    #[ORM\Column(type: Types::SMALLINT)]
+    private int $endHour = 17;
 
     #[Groups(['doctor:list', 'doctor:detail'])]
     #[ORM\ManyToOne(inversedBy: 'doctors')]
@@ -71,6 +85,21 @@ class Doctor
     #[ORM\OneToMany(targetEntity: DoctorService::class, mappedBy: 'doctor', orphanRemoval: true)]
     private Collection $doctorServices;
 
+    #[Groups(['doctor:list', 'doctor:detail'])]
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $avatarPath = null;
+
+    /**
+     * @var Collection<int, DoctorUnavailability>
+     */
+    #[ORM\OneToMany(
+        targetEntity: DoctorUnavailability::class,
+        mappedBy: 'doctor',
+        cascade: ['remove'],
+        orphanRemoval: true
+    )]
+    private Collection $unavailabilities;
+
     public function __construct()
     {
         $this->acceptsInsurance = false;
@@ -80,6 +109,7 @@ class Doctor
         $this->timeSlots = new ArrayCollection();
         $this->reviews = new ArrayCollection();
         $this->doctorServices = new ArrayCollection();
+        $this->unavailabilities = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -258,6 +288,62 @@ class Doctor
     public function removeDoctorService(DoctorService $doctorService): static
     {
         $this->doctorServices->removeElement($doctorService);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, DoctorUnavailability>
+     */
+    public function getUnavailabilities(): Collection
+    {
+        return $this->unavailabilities;
+    }
+
+    public function getWorkDays(): array
+    {
+        return $this->workDays;
+    }
+
+    public function setWorkDays(array $workDays): static
+    {
+        $this->workDays = $workDays;
+
+        return $this;
+    }
+
+    public function getStartHour(): int
+    {
+        return $this->startHour;
+    }
+
+    public function setStartHour(int $startHour): static
+    {
+        $this->startHour = $startHour;
+
+        return $this;
+    }
+
+    public function getEndHour(): int
+    {
+        return $this->endHour;
+    }
+
+    public function setEndHour(int $endHour): static
+    {
+        $this->endHour = $endHour;
+
+        return $this;
+    }
+
+    public function getAvatarPath(): ?string
+    {
+        return $this->avatarPath;
+    }
+
+    public function setAvatarPath(?string $avatarPath): static
+    {
+        $this->avatarPath = $avatarPath;
 
         return $this;
     }

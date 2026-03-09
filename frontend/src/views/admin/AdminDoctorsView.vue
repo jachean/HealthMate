@@ -7,6 +7,8 @@ import {
   getSpecialties,
 } from '@/services/adminService'
 import DoctorFormDialog from '@/components/admin/DoctorFormDialog.vue'
+import DoctorAvailabilityDialog from '@/components/admin/DoctorAvailabilityDialog.vue'
+import { uploadUrl } from '@/utils/url'
 
 const { t } = useI18n()
 
@@ -24,6 +26,14 @@ const specialties = ref([])
 const dialog = ref(false)
 const dialogMode = ref('create')
 const selectedDoctor = ref(null)
+
+const availabilityDialog = ref(false)
+const availabilityDoctor = ref(null)
+
+function openAvailability(doctor) {
+  availabilityDoctor.value = doctor
+  availabilityDialog.value = true
+}
 
 let searchTimer = null
 
@@ -134,8 +144,9 @@ onMounted(async () => {
     >
       <template #item.name="{ item }">
         <div class="d-flex align-center ga-2 py-1">
-          <v-avatar color="primary" variant="tonal" size="32">
-            <v-icon size="16">mdi-doctor</v-icon>
+          <v-avatar :color="item.avatarPath ? undefined : 'primary'" variant="tonal" size="32">
+            <v-img v-if="item.avatarPath" :src="uploadUrl(item.avatarPath)" cover />
+            <v-icon v-else size="16">mdi-doctor</v-icon>
           </v-avatar>
           <span class="font-weight-medium">Dr. {{ item.firstName }} {{ item.lastName }}</span>
         </div>
@@ -186,6 +197,10 @@ onMounted(async () => {
           <v-icon size="18">mdi-pencil-outline</v-icon>
           <v-tooltip activator="parent" location="top">{{ t('admin.form.edit') }}</v-tooltip>
         </v-btn>
+        <v-btn size="small" icon variant="text" color="secondary" @click="openAvailability(item)">
+          <v-icon size="18">mdi-calendar-remove-outline</v-icon>
+          <v-tooltip activator="parent" location="top">{{ t('admin.doctors.availability') }}</v-tooltip>
+        </v-btn>
       </template>
     </v-data-table-server>
 
@@ -196,6 +211,11 @@ onMounted(async () => {
       :clinics="clinics"
       :specialties="specialties"
       @saved="onSaved"
+    />
+
+    <DoctorAvailabilityDialog
+      v-model="availabilityDialog"
+      :doctor="availabilityDoctor"
     />
   </div>
 </template>

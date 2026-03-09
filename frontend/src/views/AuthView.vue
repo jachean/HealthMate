@@ -8,12 +8,14 @@ import LoginForm from '@/components/auth/LoginForm.vue'
 import RegisterForm from '@/components/auth/RegisterForm.vue'
 import HealthTip from '@/components/ui/HealthTip.vue'
 import useHealthTips from '@/composables/useHealthTips'
+import { useToastStore } from '@/stores/toast'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 
 const { currentTip, currentTipIndex } = useHealthTips()
+const toast = useToastStore()
 
 const isSignUp = ref(route.name === 'register')
 const errorMessage = ref('')
@@ -29,11 +31,13 @@ const toggleMode = () => {
 }
 
 const handleLoginSuccess = () => {
+  toast.show(t('auth.login.successToast'))
   const redirect = route.query.redirect || '/'
   router.push(redirect)
 }
 
 const handleRegisterSuccess = () => {
+  toast.show(t('auth.register.successToast'))
   router.push({ name: 'login' })
 }
 const handleError = (msg) => (errorMessage.value = msg)

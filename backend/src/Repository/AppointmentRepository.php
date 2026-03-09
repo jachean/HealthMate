@@ -86,6 +86,30 @@ class AppointmentRepository extends ServiceEntityRepository
         return ['data' => $data, 'total' => $total];
     }
 
+    /**
+     * Returns booked appointments whose slot starts within the next 24 hours
+     * and for which no reminder has been sent yet.
+     *
+     * @return Appointment[]
+     */
+    public function findPendingReminders(): array
+    {
+        $now  = new \DateTimeImmutable();
+        $in24 = $now->modify('+24 hours');
+
+        return $this->createQueryBuilder('a')
+            ->join('a.timeSlot', 'ts')
+            ->where('a.status = :status')
+            ->andWhere('a.reminderSentAt IS NULL')
+            ->andWhere('ts.startAt > :now')
+            ->andWhere('ts.startAt <= :in24')
+            ->setParameter('status', Appointment::STATUS_BOOKED)
+            ->setParameter('now', $now)
+            ->setParameter('in24', $in24)
+            ->getQuery()
+            ->getResult();
+    }
+
     public function findForUserOrderedByStartAt(User $user): array
     {
         return $this->createQueryBuilder('a')

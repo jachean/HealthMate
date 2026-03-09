@@ -37,6 +37,9 @@ class Appointment
     #[ORM\OneToOne(mappedBy: 'appointment', targetEntity: Review::class)]
     private ?Review $review = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $reminderSentAt = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -120,5 +123,17 @@ class Appointment
     public function getReview(): ?Review
     {
         return $this->review;
+    }
+
+    public function getReminderSentAt(): ?\DateTimeImmutable
+    {
+        return $this->reminderSentAt;
+    }
+
+    public function setReminderSentAt(\DateTimeImmutable $sentAt): static
+    {
+        $this->reminderSentAt = $sentAt;
+
+        return $this;
     }
 }
