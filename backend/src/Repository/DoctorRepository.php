@@ -107,6 +107,19 @@ class DoctorRepository extends ServiceEntityRepository
         );
     }
 
+    /** @return Doctor[] */
+    public function findDoctorsWithoutUser(): array
+    {
+        return $this->createQueryBuilder('d')
+            ->leftJoin('d.clinic', 'c')
+            ->addSelect('c')
+            ->where('d.user IS NULL')
+            ->orderBy('d.lastName', 'ASC')
+            ->addOrderBy('d.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function findAllPaginatedForAdmin(int $page, int $limit, ?string $search, ?int $clinicId = null): array
     {
         $qb = $this->createQueryBuilder('d')

@@ -30,6 +30,21 @@ class AdminDoctorController extends AdminController
     ) {
     }
 
+    #[Route('/unlinked', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function unlinked(): JsonResponse
+    {
+        $doctors = $this->doctorRepository->findDoctorsWithoutUser();
+
+        return $this->json(array_map(static fn (\App\Entity\Doctor $d) => [
+            'id'        => $d->getId(),
+            'firstName' => $d->getFirstName(),
+            'lastName'  => $d->getLastName(),
+            'clinicName' => $d->getClinic()->getName(),
+            'isActive'  => $d->isActive(),
+        ], $doctors));
+    }
+
     #[Route('', methods: ['GET'])]
     public function list(Request $request): JsonResponse
     {

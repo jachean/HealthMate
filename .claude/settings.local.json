@@ -53,7 +53,15 @@
       "Bash(composer show:*)",
       "Bash(xargs:*)",
       "Bash(tail:*)",
-      "Bash(composer run:*)"
+      "Bash(composer run:*)",
+      "WebSearch",
+      "WebFetch(domain:help.figma.com)",
+      "WebFetch(domain:developers.figma.com)",
+      "mcp__figma__generate_diagram",
+      "mcp__figma__generate_figma_design",
+      "Bash(start:*)",
+      "Bash(vendor/bin/phpstan analyse:*)",
+      "Bash(composer phpcsfix:*)"
     ]
   }
 }

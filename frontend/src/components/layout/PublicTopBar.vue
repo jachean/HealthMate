@@ -174,6 +174,10 @@ const { isDark, toggle: toggleTheme } = useAppTheme()
                       <v-icon start size="10">mdi-shield-account</v-icon>
                       {{ t('profile.roleClinicAdmin') }}
                     </v-chip>
+                    <v-chip v-if="auth.isDoctor" size="x-small" color="teal" variant="tonal" class="mt-1 font-weight-medium">
+                      <v-icon start size="10">mdi-stethoscope</v-icon>
+                      {{ t('doctor.nav.panel') }}
+                    </v-chip>
                   </div>
                 </div>
               </div>
@@ -204,6 +208,19 @@ const { isDark, toggle: toggleTheme } = useAppTheme()
                       <v-icon size="17" class="mr-1">mdi-shield-crown-outline</v-icon>
                     </template>
                     <v-list-item-title class="text-body-2 font-weight-medium">{{ t('admin.nav.panel') }}</v-list-item-title>
+                  </v-list-item>
+
+                  <v-list-item
+                    v-if="auth.isDoctor"
+                    :to="{ name: 'doctor-dashboard' }"
+                    rounded="lg"
+                    color="teal"
+                    class="user-menu-item"
+                  >
+                    <template #prepend>
+                      <v-icon size="17" class="mr-1">mdi-stethoscope</v-icon>
+                    </template>
+                    <v-list-item-title class="text-body-2 font-weight-medium">{{ t('doctor.nav.panel') }}</v-list-item-title>
                   </v-list-item>
                 </v-list>
 
@@ -364,6 +381,18 @@ const { isDark, toggle: toggleTheme } = useAppTheme()
             @click="mobileDrawer = false"
           >
             {{ t('admin.nav.panel') }}
+          </v-btn>
+          <v-btn
+            v-if="auth.isDoctor"
+            variant="tonal"
+            color="teal"
+            block
+            :to="{ name: 'doctor-dashboard' }"
+            class="mb-2"
+            prepend-icon="mdi-stethoscope"
+            @click="mobileDrawer = false"
+          >
+            {{ t('doctor.nav.panel') }}
           </v-btn>
           <v-btn
             variant="text"

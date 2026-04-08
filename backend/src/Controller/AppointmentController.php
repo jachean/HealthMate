@@ -94,7 +94,7 @@ final class AppointmentController extends AbstractController
             ], 400);
         }
 
-        if ($timeSlotRepository->hasOverlappingAppointment($timeSlot)) {
+        if ($timeSlotRepository->hasOverlappingAppointment($timeSlot, $doctorService->getDurationMinutes())) {
             return $this->json([
                 'error' => [
                     'code' => 'TIME_SLOT_CONFLICT',

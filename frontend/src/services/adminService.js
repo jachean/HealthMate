@@ -115,6 +115,18 @@ export function adminRemoveClinicAdmin(userId) {
   return api.delete(`/api/admin/users/${userId}/remove-clinic-admin`)
 }
 
+export function adminGetUnlinkedDoctors() {
+  return api.get('/api/admin/doctors/unlinked').then(r => r.data)
+}
+
+export function adminMakeDoctor(userId, doctorId) {
+  return api.post(`/api/admin/users/${userId}/make-doctor`, { doctorId }).then(r => r.data)
+}
+
+export function adminRemoveDoctor(userId) {
+  return api.delete(`/api/admin/users/${userId}/remove-doctor`).then(r => r.data)
+}
+
 export function adminGetDoctorUnavailability(doctorId) {
   return api.get(`/api/admin/doctors/${doctorId}/unavailability`).then(r => r.data)
 }

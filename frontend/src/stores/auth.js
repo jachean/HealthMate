@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', {
     loading: false,
     error: null,
     clinicAdminClinicId: null,
+    doctorId: null,
   }),
 
   getters: {
@@ -16,6 +17,7 @@ export const useAuthStore = defineStore('auth', {
       (state.user?.roles?.includes('ROLE_CLINIC_ADMIN') ?? false) &&
       !(state.user?.roles?.includes('ROLE_ADMIN') ?? false),
     clinicAdminClinicId: (state) => state.clinicAdminClinicId,
+    isDoctor: (state) => state.doctorId !== null,
   },
 
   actions: {
@@ -50,6 +52,7 @@ export const useAuthStore = defineStore('auth', {
         const { data } = await api.get('/api/me')
         this.user = data
         this.clinicAdminClinicId = data.clinicAdminClinicId ?? null
+        this.doctorId = data.doctorId ?? null
       } catch {
         this.logout()
       }
@@ -59,6 +62,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = null
       this.user = null
       this.clinicAdminClinicId = null
+      this.doctorId = null
       localStorage.removeItem('hm_token')
     },
   },
