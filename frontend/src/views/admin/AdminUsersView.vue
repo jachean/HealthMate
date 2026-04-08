@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import {
   adminGetUsers, adminDeactivateUser, adminActivateUser,
   adminMakeClinicAdmin, adminRemoveClinicAdmin, adminGetClinics,
+  adminGetUnlinkedDoctors, adminMakeDoctor, adminRemoveDoctor,
 } from '@/services/adminService'
 import { uploadUrl } from '@/utils/url'
 
@@ -45,6 +46,21 @@ const removeClinicAdminDialog = ref(false)
 const removeClinicAdminTarget = ref(null)
 const removeClinicAdminSaving = ref(false)
 const removeClinicAdminError = ref('')
+
+// ── Assign doctor dialog ──────────────────────────────────────────────────────
+const assignDoctorDialog = ref(false)
+const assignDoctorTarget = ref(null)
+const assignDoctorId = ref(null)
+const assignDoctorSaving = ref(false)
+const assignDoctorError = ref('')
+const unlinkedDoctors = ref([])
+
+
+// ── Remove doctor dialog ──────────────────────────────────────────────────────
+const removeDoctorDialog = ref(false)
+const removeDoctorTarget = ref(null)
+const removeDoctorSaving = ref(false)
+const removeDoctorError = ref('')
 
 const headers = [
   { title: t('admin.users.name'), key: 'name', sortable: false },
@@ -167,6 +183,54 @@ async function confirmRemoveClinicAdmin() {
   }
 }
 
+async function openAssignDoctor(user) {
+  assignDoctorTarget.value = user
+  assignDoctorId.value = null
+  assignDoctorError.value = ''
+  if (unlinkedDoctors.value.length === 0) {
+    unlinkedDoctors.value = await adminGetUnlinkedDoctors()
+  }
+  assignDoctorDialog.value = true
+}
+
+async function confirmAssignDoctor() {
+  if (!assignDoctorTarget.value || !assignDoctorId.value) return
+  assignDoctorSaving.value = true
+  assignDoctorError.value = ''
+  try {
+    await adminMakeDoctor(assignDoctorTarget.value.id, assignDoctorId.value)
+    assignDoctorDialog.value = false
+    unlinkedDoctors.value = []
+    await fetchUsers()
+  } catch (e) {
+    assignDoctorError.value = e?.response?.data?.error || t('admin.users.errorAction')
+  } finally {
+    assignDoctorSaving.value = false
+  }
+}
+
+function openRemoveDoctor(user) {
+  removeDoctorTarget.value = user
+  removeDoctorError.value = ''
+  removeDoctorDialog.value = true
+}
+
+async function confirmRemoveDoctor() {
+  if (!removeDoctorTarget.value) return
+  removeDoctorSaving.value = true
+  removeDoctorError.value = ''
+  try {
+    await adminRemoveDoctor(removeDoctorTarget.value.id)
+    removeDoctorDialog.value = false
+    unlinkedDoctors.value = []
+    await fetchUsers()
+  } catch {
+    removeDoctorError.value = t('admin.users.errorAction')
+  } finally {
+    removeDoctorSaving.value = false
+  }
+}
+
 onMounted(fetchUsers)
 </script>
 
@@ -250,6 +314,84 @@ onMounted(fetchUsers)
     </v-card>
   </v-dialog>
 
+  <!-- Assign doctor dialog -->
+  <v-dialog v-model="assignDoctorDialog" max-width="440">
+    <v-card>
+      <v-card-title class="pa-4 pb-2">{{ t('admin.users.assignDoctorTitle') }}</v-card-title>
+      <v-card-text class="pa-4 pt-2">
+        <template v-if="assignDoctorTarget">
+          <div class="text-body-2 mb-3">
+            <strong>{{ assignDoctorTarget.firstName }} {{ assignDoctorTarget.lastName }}</strong>
+            <span class="text-medium-emphasis ml-1">{{ assignDoctorTarget.email }}</span>
+          </div>
+        </template>
+        <v-autocomplete
+          v-model="assignDoctorId"
+          :items="unlinkedDoctors"
+          item-value="id"
+          :item-title="d => `${d.firstName} ${d.lastName}`"
+          :label="t('admin.users.assignDoctorSelect')"
+          variant="outlined"
+          density="compact"
+          clearable
+          :custom-filter="(_, query, item) => {
+            const d = item.raw
+            const name = `${d.firstName} ${d.lastName}`.toLowerCase()
+            const clinic = (d.clinicName ?? '').toLowerCase()
+            const q = query.toLowerCase()
+            return name.includes(q) || clinic.includes(q)
+          }"
+        >
+          <template #item="{ item, props: itemProps }">
+            <v-list-item v-bind="itemProps" :subtitle="item.raw.clinicName">
+              <template #title>
+                <span>{{ item.raw.firstName }} {{ item.raw.lastName }}</span>
+                <v-chip
+                  v-if="!item.raw.isActive"
+                  size="x-small"
+                  color="warning"
+                  variant="tonal"
+                  class="ml-2"
+                >{{ t('admin.doctors.inactive') }}</v-chip>
+              </template>
+            </v-list-item>
+          </template>
+        </v-autocomplete>
+        <v-alert v-if="assignDoctorError" type="error" density="compact" class="mt-3">{{ assignDoctorError }}</v-alert>
+      </v-card-text>
+      <v-card-actions class="pa-4 pt-0">
+        <v-spacer />
+        <v-btn variant="text" @click="assignDoctorDialog = false">{{ t('admin.form.cancel') }}</v-btn>
+        <v-btn color="primary" variant="tonal" :loading="assignDoctorSaving" :disabled="!assignDoctorId" @click="confirmAssignDoctor">
+          {{ t('admin.users.assignDoctorConfirm') }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- Remove doctor dialog -->
+  <v-dialog v-model="removeDoctorDialog" max-width="420">
+    <v-card>
+      <v-card-title class="pa-4 pb-2">{{ t('admin.users.removeDoctorTitle') }}</v-card-title>
+      <v-card-text class="pa-4 pt-0">
+        <template v-if="removeDoctorTarget">
+          <div class="text-body-2">
+            <strong>{{ removeDoctorTarget.firstName }} {{ removeDoctorTarget.lastName }}</strong>
+          </div>
+          <div class="text-caption text-medium-emphasis">{{ removeDoctorTarget.linkedDoctorName }}</div>
+        </template>
+        <v-alert v-if="removeDoctorError" type="error" density="compact" class="mt-3">{{ removeDoctorError }}</v-alert>
+      </v-card-text>
+      <v-card-actions class="pa-4 pt-0">
+        <v-spacer />
+        <v-btn variant="text" @click="removeDoctorDialog = false">{{ t('admin.form.cancel') }}</v-btn>
+        <v-btn color="error" variant="tonal" :loading="removeDoctorSaving" @click="confirmRemoveDoctor">
+          {{ t('admin.form.confirm') }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <div>
     <!-- Page header -->
     <div class="d-flex align-center justify-space-between mb-5">
@@ -321,20 +463,30 @@ onMounted(fetchUsers)
       </template>
 
       <template #item.role="{ item }">
-        <v-chip
-          :color="item.isAdmin ? 'primary' : item.isClinicAdmin ? 'secondary' : 'default'"
-          :variant="(item.isAdmin || item.isClinicAdmin) ? 'tonal' : 'outlined'"
-          size="small"
-        >
-          {{ item.isAdmin ? t('admin.users.admin') : item.isClinicAdmin ? t('admin.users.roleClinicAdmin') : t('admin.users.user') }}
-        </v-chip>
+        <div class="d-flex flex-wrap gap-1 justify-center">
+          <v-chip
+            :color="item.isAdmin ? 'primary' : item.isClinicAdmin ? 'secondary' : 'default'"
+            :variant="(item.isAdmin || item.isClinicAdmin) ? 'tonal' : 'outlined'"
+            size="small"
+          >
+            {{ item.isAdmin ? t('admin.users.admin') : item.isClinicAdmin ? t('admin.users.roleClinicAdmin') : t('admin.users.user') }}
+          </v-chip>
+          <v-chip v-if="item.isDoctorUser" color="teal" variant="tonal" size="small">
+            {{ t('admin.users.roleDoctor') }}
+          </v-chip>
+        </div>
       </template>
 
       <template #item.clinic="{ item }">
-        <span v-if="item.clinicAdminClinicName" class="text-body-2 text-medium-emphasis">
-          {{ item.clinicAdminClinicName }}
-        </span>
-        <span v-else class="text-caption text-disabled">—</span>
+        <div>
+          <span v-if="item.clinicAdminClinicName" class="text-body-2 text-medium-emphasis d-block">
+            {{ item.clinicAdminClinicName }}
+          </span>
+          <span v-if="item.linkedDoctorName" class="text-caption text-teal d-block">
+            {{ item.linkedDoctorName }}
+          </span>
+          <span v-if="!item.clinicAdminClinicName && !item.linkedDoctorName" class="text-caption text-disabled">—</span>
+        </div>
       </template>
 
       <template #item.status="{ item }">
@@ -388,6 +540,32 @@ onMounted(fetchUsers)
           >
             <v-icon size="18">mdi-shield-off</v-icon>
             <v-tooltip activator="parent" location="top">{{ t('admin.users.removeClinicAdmin') }}</v-tooltip>
+          </v-btn>
+
+          <!-- Assign doctor (for non-admin, non-doctor users) -->
+          <v-btn
+            v-if="!item.isAdmin && !item.isDoctorUser"
+            size="small"
+            icon
+            variant="text"
+            color="teal"
+            @click="openAssignDoctor(item)"
+          >
+            <v-icon size="18">mdi-stethoscope</v-icon>
+            <v-tooltip activator="parent" location="top">{{ t('admin.users.assignDoctor') }}</v-tooltip>
+          </v-btn>
+
+          <!-- Remove doctor link -->
+          <v-btn
+            v-if="item.isDoctorUser"
+            size="small"
+            icon
+            variant="text"
+            color="error"
+            @click="openRemoveDoctor(item)"
+          >
+            <v-icon size="18">mdi-stethoscope-off</v-icon>
+            <v-tooltip activator="parent" location="top">{{ t('admin.users.removeDoctor') }}</v-tooltip>
           </v-btn>
         </div>
       </template>

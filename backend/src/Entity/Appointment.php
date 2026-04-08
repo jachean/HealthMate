@@ -10,6 +10,8 @@ class Appointment
 {
     public const STATUS_BOOKED = 'booked';
     public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_IN_PROGRESS = 'in_progress';
+    public const STATUS_COMPLETED = 'completed';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -40,6 +42,15 @@ class Appointment
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $reminderSentAt = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $startedAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $completedAt = null;
+
+    #[ORM\Column(options: ['default' => 0])]
+    private int $delayMinutes = 0;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -58,8 +69,13 @@ class Appointment
 
     public function setStatus(string $status): static
     {
-        // ⚠️ Optional (but recommended): validate status
-        if (!\in_array($status, [self::STATUS_BOOKED, self::STATUS_CANCELLED], true)) {
+        $validStatuses = [
+            self::STATUS_BOOKED,
+            self::STATUS_CANCELLED,
+            self::STATUS_IN_PROGRESS,
+            self::STATUS_COMPLETED,
+        ];
+        if (!\in_array($status, $validStatuses, true)) {
             throw new \InvalidArgumentException('Invalid appointment status.');
         }
 
@@ -133,6 +149,42 @@ class Appointment
     public function setReminderSentAt(\DateTimeImmutable $sentAt): static
     {
         $this->reminderSentAt = $sentAt;
+
+        return $this;
+    }
+
+    public function getStartedAt(): ?\DateTimeImmutable
+    {
+        return $this->startedAt;
+    }
+
+    public function setStartedAt(?\DateTimeImmutable $startedAt): static
+    {
+        $this->startedAt = $startedAt;
+
+        return $this;
+    }
+
+    public function getCompletedAt(): ?\DateTimeImmutable
+    {
+        return $this->completedAt;
+    }
+
+    public function setCompletedAt(?\DateTimeImmutable $completedAt): static
+    {
+        $this->completedAt = $completedAt;
+
+        return $this;
+    }
+
+    public function getDelayMinutes(): int
+    {
+        return $this->delayMinutes;
+    }
+
+    public function setDelayMinutes(int $delayMinutes): static
+    {
+        $this->delayMinutes = $delayMinutes;
 
         return $this;
     }

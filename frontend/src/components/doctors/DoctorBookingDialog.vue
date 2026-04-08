@@ -199,7 +199,9 @@ async function loadAvailability() {
   selectedSlot.value = null
 
   try {
-    const { data } = await api.get(`/api/doctors/${props.doctor.id}/availability`)
+    const { data } = await api.get(`/api/doctors/${props.doctor.id}/availability`, {
+      params: { doctorServiceId: selectedService.value.id },
+    })
     slots.value = Array.isArray(data) ? data : []
     selectedDay.value = dayOptions.value[0] ?? null
   } catch {

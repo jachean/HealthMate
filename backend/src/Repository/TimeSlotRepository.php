@@ -2,9 +2,9 @@
 
 namespace App\Repository;
 
+use App\Entity\Appointment;
 use App\Entity\TimeSlot;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use App\Entity\Appointment;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -17,26 +17,57 @@ class TimeSlotRepository extends ServiceEntityRepository
         parent::__construct($registry, TimeSlot::class);
     }
 
-    public function findAvailableSlotsForDoctor(int $doctorId): array
+    public function findAvailableSlotsForDoctor(int $doctorId, int $requestedDurationMinutes = 60): array
     {
-        return $this->createQueryBuilder('ts')
+        $now = new \DateTimeImmutable();
+
+        $slots = $this->createQueryBuilder('ts')
             ->where('ts.doctor = :doctorId')
             ->andWhere('ts.startAt > :now')
-            ->andWhere(
-                'NOT EXISTS (
-                SELECT 1
-                FROM App\Entity\Appointment a
-                JOIN a.timeSlot ats
-                WHERE ats.doctor = ts.doctor
-                AND ats.startAt < ts.endAt
-                AND ats.endAt > ts.startAt
-            )'
-            )
+            ->andWhere('ts.isBooked = false')
             ->setParameter('doctorId', $doctorId)
-            ->setParameter('now', new \DateTimeImmutable())
+            ->setParameter('now', $now)
             ->orderBy('ts.startAt', 'ASC')
             ->getQuery()
             ->getResult();
+
+        // Fetch all active (non-cancelled) appointments for this doctor
+        // with their actual service durations to compute true blocked periods.
+        $bookedPeriods = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('ats.startAt AS start, ds.durationMinutes AS duration')
+            ->from(Appointment::class, 'a')
+            ->join('a.timeSlot', 'ats')
+            ->join('a.doctorService', 'ds')
+            ->where('ats.doctor = :doctorId')
+            ->andWhere('a.status != :cancelled')
+            ->andWhere('ats.startAt > :now')
+            ->setParameter('doctorId', $doctorId)
+            ->setParameter('cancelled', Appointment::STATUS_CANCELLED)
+            ->setParameter('now', $now)
+            ->getQuery()
+            ->getArrayResult();
+
+        return array_values(array_filter(
+            $slots,
+            function (TimeSlot $slot) use ($bookedPeriods, $requestedDurationMinutes): bool {
+                $slotStart = $slot->getStartAt();
+                $slotEnd   = $slotStart->modify("+{$requestedDurationMinutes} minutes");
+
+                foreach ($bookedPeriods as $period) {
+                    /** @var \DateTimeImmutable $bookedStart */
+                    $bookedStart = $period['start'];
+                    $bookedEnd   = $bookedStart->modify("+{$period['duration']} minutes");
+
+                    // Two intervals overlap when one starts before the other ends.
+                    if ($bookedStart < $slotEnd && $bookedEnd > $slotStart) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        ));
     }
 
     public function findOneForBooking(int $id): ?TimeSlot
@@ -132,20 +163,34 @@ class TimeSlotRepository extends ServiceEntityRepository
             ->execute();
     }
 
-    public function hasOverlappingAppointment(TimeSlot $slot): bool
+    public function hasOverlappingAppointment(TimeSlot $slot, int $serviceDurationMinutes = 60): bool
     {
-        return (bool) $this->getEntityManager()
+        $slotStart = $slot->getStartAt();
+        $slotEnd   = $slotStart->modify("+{$serviceDurationMinutes} minutes");
+
+        $bookedPeriods = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('1')
+            ->select('ats.startAt AS start, ds.durationMinutes AS duration')
             ->from(Appointment::class, 'a')
-            ->join('a.timeSlot', 'ts')
-            ->where('ts.doctor = :doctor')
-            ->andWhere('ts.startAt < :end')
-            ->andWhere('ts.endAt > :start')
+            ->join('a.timeSlot', 'ats')
+            ->join('a.doctorService', 'ds')
+            ->where('ats.doctor = :doctor')
+            ->andWhere('a.status != :cancelled')
             ->setParameter('doctor', $slot->getDoctor())
-            ->setParameter('start', $slot->getStartAt())
-            ->setParameter('end', $slot->getEndAt())
+            ->setParameter('cancelled', Appointment::STATUS_CANCELLED)
             ->getQuery()
-            ->getOneOrNullResult();
+            ->getArrayResult();
+
+        foreach ($bookedPeriods as $period) {
+            /** @var \DateTimeImmutable $bookedStart */
+            $bookedStart = $period['start'];
+            $bookedEnd   = $bookedStart->modify("+{$period['duration']} minutes");
+
+            if ($bookedStart < $slotEnd && $bookedEnd > $slotStart) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

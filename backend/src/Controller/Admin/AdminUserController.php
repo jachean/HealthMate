@@ -3,7 +3,9 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Clinic;
+use App\Entity\Doctor;
 use App\Entity\User;
+use App\Repository\DoctorRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,6 +20,7 @@ class AdminUserController extends AdminController
 {
     public function __construct(
         private UserRepository $userRepository,
+        private DoctorRepository $doctorRepository,
         private EntityManagerInterface $em,
     ) {
     }
@@ -126,6 +129,69 @@ class AdminUserController extends AdminController
         return new Response(null, Response::HTTP_NO_CONTENT);
     }
 
+    #[Route('/{id}/make-doctor', methods: ['POST'])]
+    public function makeDoctor(int $id, Request $request): JsonResponse
+    {
+        $user = $this->userRepository->find($id);
+        if (!$user) {
+            return $this->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $body     = json_decode($request->getContent(), true) ?? [];
+        $doctorId = isset($body['doctorId']) ? (int) $body['doctorId'] : null;
+
+        if (!$doctorId) {
+            return $this->json(['error' => 'doctorId is required'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $doctor = $this->doctorRepository->find($doctorId);
+        if (!$doctor) {
+            return $this->json(['error' => 'Doctor not found'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        if ($doctor->getUser() !== null) {
+            return $this->json(
+                ['error' => 'This doctor is already linked to a user account'],
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
+        }
+
+        if (in_array('ROLE_DOCTOR', $user->getRoles(), true)) {
+            return $this->json(['error' => 'User already has ROLE_DOCTOR'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $doctor->setUser($user);
+        $user->addRole('ROLE_DOCTOR');
+        $this->em->flush();
+
+        return $this->json($this->toArray($user));
+    }
+
+    #[Route('/{id}/remove-doctor', methods: ['DELETE'])]
+    public function removeDoctor(int $id): JsonResponse
+    {
+        $user = $this->userRepository->find($id);
+        if (!$user) {
+            return $this->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $doctor = $this->doctorRepository->findOneBy(['user' => $user]);
+        if ($doctor) {
+            $doctor->setUser(null);
+        }
+
+        foreach ($user->getUserRoles()->toArray() as $userRole) {
+            if ($userRole->getRole() === 'ROLE_DOCTOR') {
+                $user->getUserRoles()->removeElement($userRole);
+                $this->em->remove($userRole);
+            }
+        }
+
+        $this->em->flush();
+
+        return $this->json($this->toArray($user));
+    }
+
     private function toArray(User $user): array
     {
         $clinicAdminClinicId   = null;
@@ -137,6 +203,13 @@ class AdminUserController extends AdminController
                 break;
             }
         }
+
+        $linkedDoctor     = $this->doctorRepository->findOneBy(['user' => $user]);
+        $isDoctorUser     = $linkedDoctor !== null;
+        $linkedDoctorId   = $linkedDoctor?->getId();
+        $linkedDoctorName = $linkedDoctor
+            ? $linkedDoctor->getFirstName() . ' ' . $linkedDoctor->getLastName()
+            : null;
 
         return [
             'id'                    => $user->getId(),
@@ -151,6 +224,9 @@ class AdminUserController extends AdminController
             'clinicAdminClinicId'   => $clinicAdminClinicId,
             'clinicAdminClinicName' => $clinicAdminClinicName,
             'isActive'              => $user->isActive(),
+            'isDoctorUser'          => $isDoctorUser,
+            'linkedDoctorId'        => $linkedDoctorId,
+            'linkedDoctorName'      => $linkedDoctorName,
         ];
     }
 }

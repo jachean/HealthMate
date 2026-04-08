@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\DTO\UserUpdateDTO;
 use App\Entity\User;
 use App\Entity\UserRole;
+use App\Repository\DoctorRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -19,7 +20,7 @@ class UserController extends AbstractController
 {
     #[Route('/api/me', name: 'api_me', methods: ['GET'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function me(): JsonResponse
+    public function me(DoctorRepository $doctorRepository): JsonResponse
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -33,15 +34,19 @@ class UserController extends AbstractController
             }
         }
 
+        $doctor   = $doctorRepository->findOneBy(['user' => $user]);
+        $doctorId = $doctor?->getId();
+
         return $this->json([
-            'id'                 => $user->getId(),
-            'email'              => $user->getEmail(),
-            'username'           => $user->getDisplayUsername(),
-            'firstName'          => $user->getFirstName(),
-            'lastName'           => $user->getLastName(),
-            'profileImage'       => $user->getProfileImage(),
-            'roles'              => $user->getRoles(),
+            'id'                  => $user->getId(),
+            'email'               => $user->getEmail(),
+            'username'            => $user->getDisplayUsername(),
+            'firstName'           => $user->getFirstName(),
+            'lastName'            => $user->getLastName(),
+            'profileImage'        => $user->getProfileImage(),
+            'roles'               => $user->getRoles(),
             'clinicAdminClinicId' => $clinicAdminClinicId,
+            'doctorId'            => $doctorId,
         ]);
     }
 

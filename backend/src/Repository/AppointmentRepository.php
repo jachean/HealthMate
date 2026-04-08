@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Appointment;
+use App\Entity\Doctor;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -108,6 +109,79 @@ class AppointmentRepository extends ServiceEntityRepository
             ->setParameter('in24', $in24)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Returns all non-cancelled appointments for a given doctor on a specific date, ordered by slot start ASC.
+     *
+     * @return Appointment[]
+     */
+    public function findForDoctorByDate(Doctor $doctor, \DateTimeImmutable $date): array
+    {
+        $dayStart = $date->setTime(0, 0, 0);
+        $dayEnd   = $dayStart->modify('+1 day');
+
+        return $this->createQueryBuilder('a')
+            ->join('a.timeSlot', 'ts')
+            ->join('a.doctorService', 'ds')
+            ->join('ds.medicalService', 'ms')
+            ->join('a.user', 'u')
+            ->addSelect('ts', 'ds', 'ms', 'u')
+            ->where('ts.doctor = :doctor')
+            ->andWhere('ts.startAt >= :dayStart')
+            ->andWhere('ts.startAt < :dayEnd')
+            ->andWhere('a.status != :cancelled')
+            ->setParameter('doctor', $doctor)
+            ->setParameter('dayStart', $dayStart)
+            ->setParameter('dayEnd', $dayEnd)
+            ->setParameter('cancelled', Appointment::STATUS_CANCELLED)
+            ->orderBy('ts.startAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Returns subsequent booked/in_progress appointments for a doctor today, after a given slot start time.
+     *
+     * @return Appointment[]
+     */
+    public function findSubsequentTodayForDoctor(Doctor $doctor, \DateTimeImmutable $afterSlotStart): array
+    {
+        $todayStart = new \DateTimeImmutable('today midnight');
+        $todayEnd   = $todayStart->modify('+1 day');
+
+        return $this->createQueryBuilder('a')
+            ->join('a.timeSlot', 'ts')
+            ->join('a.user', 'u')
+            ->join('a.doctorService', 'ds')
+            ->join('ds.medicalService', 'ms')
+            ->addSelect('ts', 'u', 'ds', 'ms')
+            ->where('ts.doctor = :doctor')
+            ->andWhere('ts.startAt > :afterSlotStart')
+            ->andWhere('ts.startAt >= :todayStart')
+            ->andWhere('ts.startAt < :todayEnd')
+            ->andWhere('a.status IN (:statuses)')
+            ->setParameter('doctor', $doctor)
+            ->setParameter('afterSlotStart', $afterSlotStart)
+            ->setParameter('todayStart', $todayStart)
+            ->setParameter('todayEnd', $todayEnd)
+            ->setParameter('statuses', [Appointment::STATUS_BOOKED, Appointment::STATUS_IN_PROGRESS])
+            ->orderBy('ts.startAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findInProgressForDoctor(Doctor $doctor): ?Appointment
+    {
+        return $this->createQueryBuilder('a')
+            ->join('a.timeSlot', 'ts')
+            ->where('ts.doctor = :doctor')
+            ->andWhere('a.status = :status')
+            ->setParameter('doctor', $doctor)
+            ->setParameter('status', Appointment::STATUS_IN_PROGRESS)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     public function findForUserOrderedByStartAt(User $user): array

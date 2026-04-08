@@ -133,7 +133,9 @@ final class DoctorController extends AbstractController
     #[Route('/{id}/availability', methods: ['GET'])]
     public function availability(
         int $id,
+        Request $request,
         DoctorRepository $doctorRepository,
+        DoctorServiceRepository $doctorServiceRepository,
         TimeSlotRepository $timeSlotRepository
     ): JsonResponse {
         $doctor = $doctorRepository->find($id);
@@ -145,7 +147,16 @@ final class DoctorController extends AbstractController
             );
         }
 
-        $slots = $timeSlotRepository->findAvailableSlotsForDoctor($id);
+        $requestedDuration = 60;
+        $doctorServiceId   = $request->query->getInt('doctorServiceId') ?: null;
+        if ($doctorServiceId) {
+            $doctorService = $doctorServiceRepository->find($doctorServiceId);
+            if ($doctorService && $doctorService->getDoctor()->getId() === $id) {
+                $requestedDuration = $doctorService->getDurationMinutes();
+            }
+        }
+
+        $slots = $timeSlotRepository->findAvailableSlotsForDoctor($id, $requestedDuration);
 
         $workDays  = $doctor->getWorkDays();
         $startHour = $doctor->getStartHour();

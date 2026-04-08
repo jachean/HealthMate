@@ -69,6 +69,15 @@ const router = createRouter({
     { path: '/register', name: 'register', component: AuthView },
 
     {
+      path: '/doctor',
+      component: () => import('@/components/layout/DoctorLayout.vue'),
+      meta: { requiresDoctor: true },
+      children: [
+        { path: '', name: 'doctor-dashboard', component: () => import('@/views/doctor/DoctorDashboardView.vue') },
+      ],
+    },
+
+    {
       path: '/admin',
       component: () => import('@/components/layout/AdminLayout.vue'),
       meta: { requiresAdmin: true },
@@ -103,6 +112,11 @@ router.beforeEach(async (to) => {
 
   if (to.meta.globalAdminOnly && !auth.isAdmin) {
     return { name: 'admin-doctors' }
+  }
+
+  if (to.meta.requiresDoctor) {
+    if (!auth.token) return { name: 'login', query: { redirect: to.fullPath } }
+    if (!auth.isDoctor) return { name: 'home' }
   }
 })
 
